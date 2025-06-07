@@ -1,33 +1,26 @@
-function Navbar() {
-  return (
-    <nav class="bg-white shadow-md">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16 items-center">
-          <div class="flex-shrink-0">
-            <a href="#" class="text-xl font-semibold text-gray-800">
-              MyApp
-            </a>
-          </div>
+import { Bars3Icon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { useDispatch } from "react-redux";
+import { setSidebarOpen } from "../layout/adminSlice";
 
-          <div class="md:hidden">
-            <button class="text-gray-700 hover:text-blue-500 focus:outline-none">
-              <svg
-                class="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
+export default function Navbar({ user }) {
+  const dispatch = useDispatch();
+
+  return (
+    <header className="bg-black text-white flex items-center justify-between px-4 md:px-6 py-4 shadow">
+      <button
+        className="md:hidden"
+        onClick={() => dispatch(setSidebarOpen(true))}
+        aria-label="Open sidebar"
+      >
+        <Bars3Icon className="h-7 w-7" />
+      </button>
+
+      <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+
+      <div className="flex items-center gap-3">
+        <span className="hidden sm:block text-sm">{user?.fullName}</span>
+        <UserCircleIcon className="h-8 w-8 text-white" />
       </div>
-    </nav>
+    </header>
   );
 }
-
-export default Navbar;

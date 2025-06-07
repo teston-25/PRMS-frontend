@@ -5,7 +5,7 @@ import AuthCard from "../../../components/forms/AuthCard";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { login, setLoading, setError } from "../authSplic";
+import { login, setLoading, setError } from "../authSlice";
 
 export default function Login() {
   const [email, setEmail] = useState("");

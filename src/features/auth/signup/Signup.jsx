@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import AuthCard from "../../../components/forms/AuthCard";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { signup, setLoading, setError } from "../authSplic";
+import { signup, setLoading, setError } from "../authSlice";
 
 export default function Signup() {
   const [fullName, setFullName] = useState("");
