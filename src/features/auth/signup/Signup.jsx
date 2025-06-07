@@ -1,16 +1,19 @@
 import { useState } from "react";
-import api from "../services/axios";
+import api from "../../../services/axios";
 import toast from "react-hot-toast";
-import AuthCard from "../components/AuthCard";
+import AuthCard from "../../../components/forms/AuthCard";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { signup, setLoading, setError } from "../authSplic";
 
 export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [token, setToken] = useState("");
+
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -20,30 +23,33 @@ export default function Signup() {
       return;
     }
 
-    if (!fullName.trim()) {
-      toast.error("Full name is required");
+    if (!fullName.trim() || !email.trim()) {
+      toast.error("Full name and email are required");
       return;
     }
 
-    if (!email.trim()) {
-      toast.error("Email is required");
-      return;
-    }
+    dispatch(setLoading(true));
 
     try {
       const res = await api.post("/auth/signup", {
         fullName,
         email,
         password,
-        token,
       });
-      toast.success("Signup successful: " + (res.data.message || "Welcome!"));
-      localStorage.setItem("token", res.data.token);
-      setTimeout(
-        () => toast.success("Login successful: " + res.data.message),
-        1000
+
+      const { user, token, role, message } = res.data;
+
+      dispatch(
+        signup({
+          user,
+          token,
+          role,
+        })
       );
-      setToken(res.data.token);
+
+      localStorage.setItem("token", token);
+
+      toast.success("Signup successful: " + (message || "Welcome!"));
 
       setFullName("");
       setEmail("");
@@ -52,9 +58,11 @@ export default function Signup() {
 
       navigate("/profile");
     } catch (err) {
-      toast.error(
-        "Signup failed: " + (err.response?.data?.message || err.message)
-      );
+      const errorMsg = err.response?.data?.message || err.message;
+      dispatch(setError(errorMsg));
+      toast.error("Signup failed: " + errorMsg);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -72,7 +80,6 @@ export default function Signup() {
         onChange={(e) => setFullName(e.target.value)}
         required
       />
-
       <input
         type="email"
         placeholder="Email"
@@ -81,7 +88,6 @@ export default function Signup() {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-
       <input
         type="password"
         placeholder="Password"
@@ -90,7 +96,6 @@ export default function Signup() {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-
       <input
         type="password"
         placeholder="Confirm Password"

@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
+import Signup from "./features/auth/signup/Signup";
+import Login from "./features/auth/login/Login";
 import Profile from "./pages/Profile";
-import ForgotPass from "./pages/ForgotPass";
-import ResetPass from "./pages/ResetPass";
+import ForgotPass from "./features/auth/login/ForgotPass";
+import ResetPass from "./features/auth/login/ResetPass";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/forgot-password" element={<ForgotPass />} />
             <Route path="/reset-password/:token" element={<ResetPass />} />
           </Routes>

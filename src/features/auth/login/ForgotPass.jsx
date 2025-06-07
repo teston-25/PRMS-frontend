@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../services/axios";
+import api from "../../../services/axios";
 import toast from "react-hot-toast";
 
 export default function ForgotPass() {
