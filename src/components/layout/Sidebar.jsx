@@ -1,29 +1,45 @@
 import { NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setSidebarOpen, logout } from "../layout/adminSlice";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  FileText,
+  Settings,
+  LogOut,
+  ClipboardList,
+} from "lucide-react";
 
 const navItems = [
-  { name: "Dashboard", to: "/admin" },
-  { name: "Patients", to: "/admin/patients" },
-  { name: "Appointments", to: "/admin/appointments" },
-  { name: "Users", to: "/admin/users" },
-  { name: "Reports", to: "/admin/reports" },
-  { name: "Settings", to: "/admin/settings" },
-  { name: "Access Logs", to: "/admin/logs" },
+  { name: "Dashboard", to: "/admin", icon: <LayoutDashboard size={18} /> },
+  { name: "Patients", to: "/admin/patients", icon: <Users size={18} /> },
+  {
+    name: "Appointments",
+    to: "/admin/appointments",
+    icon: <CalendarDays size={18} />,
+  },
+  { name: "Users", to: "/admin/users", icon: <Users size={18} /> },
+  { name: "Reports", to: "/admin/reports", icon: <FileText size={18} /> },
+  { name: "Settings", to: "/admin/settings", icon: <Settings size={18} /> },
+  { name: "Access Logs", to: "/admin/logs", icon: <ClipboardList size={18} /> },
 ];
 
 export default function Sidebar() {
   const dispatch = useDispatch();
   const sidebarOpen = useSelector((state) => state.admin.sidebarOpen);
   console.log(sidebarOpen);
+
   return (
-    <aside className="w-64 h-full bg-gradient-to-b from-green-200 via-green-400 to-green-600 shadow-md">
-      <div className="p-6 text-xl font-bold text-gray-900 border-b bg-green-100/50">
+    <aside className="w-64 h-full bg-gradient-to-br from-blue-100 via-blue-300 to-blue-500 shadow-xl flex flex-col">
+      {/* Header */}
+      <div className="px-6 py-5 text-2xl font-bold text-gray-800 border-b border-blue-300/50 bg-blue-50 rounded-br-3xl">
         PRMS Admin
       </div>
 
-      <nav className="mt-6 flex flex-col gap-1">
-        {navItems.map(({ name, to }) => (
+      {/* Nav Links */}
+      <nav className="flex-1 mt-4 space-y-1 px-3">
+        {navItems.map(({ name, to, icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -31,24 +47,29 @@ export default function Sidebar() {
             onClick={() => dispatch(setSidebarOpen(false))}
             className={({ isActive }) =>
               [
-                "px-6 py-2 transition-colors",
+                "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors",
                 isActive
-                  ? "bg-white text-green-700 font-semibold rounded-tr-2xl rounded-br-2xl shadow"
-                  : "text-gray-900 hover:bg-green-300/70",
+                  ? "bg-white text-blue-800 shadow-sm"
+                  : "text-gray-800 hover:bg-white/30 hover:text-blue-900",
               ].join(" ")
             }
           >
+            {icon}
             {name}
           </NavLink>
         ))}
+      </nav>
 
+      {/* Logout */}
+      <div className="px-3 py-4 border-t border-green-300/50">
         <button
           onClick={() => dispatch(logout())}
-          className="text-left w-full px-6 py-2 text-red-700 hover:bg-red-100 transition-colors"
+          className="w-full flex items-center gap-3 text-sm font-semibold text-red-700 px-4 py-3 hover:bg-red-100 rounded-xl transition-colors"
         >
+          <LogOut size={18} />
           Logout
         </button>
-      </nav>
+      </div>
     </aside>
   );
 }

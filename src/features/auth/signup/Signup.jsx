@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from "../../../services/axios";
 import toast from "react-hot-toast";
 import AuthCard from "../../../components/forms/AuthCard";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { signup, setLoading, setError } from "../authSlice";
 
@@ -104,6 +104,11 @@ export default function Signup() {
         onChange={(e) => setConfirmPassword(e.target.value)}
         required
       />
+      <p className="text-sm mt-2 text-right">
+        <Link to="/login" className="text-blue-600 hover:underline">
+          want to login?
+        </Link>
+      </p>
     </AuthCard>
   );
 }

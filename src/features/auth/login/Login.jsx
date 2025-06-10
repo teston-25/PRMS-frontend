@@ -54,7 +54,7 @@ export default function Login() {
   };
 
   return (
-    <AuthCard title="Welcome Back" buttonText="Log In" onSubmit={handleLogin}>
+    <AuthCard title="Welcome" buttonText="Log In" onSubmit={handleLogin}>
       <input
         type="email"
         placeholder="Email"
@@ -74,6 +74,11 @@ export default function Login() {
       <p className="text-sm mt-2 text-right">
         <Link to="/forgot-password" className="text-blue-600 hover:underline">
           Forgot password?
+        </Link>
+      </p>
+      <p className="text-sm mt-2 text-right">
+        <Link to="/signup" className="text-blue-600 hover:underline">
+          if u don't have account Signup?
         </Link>
       </p>
     </AuthCard>
