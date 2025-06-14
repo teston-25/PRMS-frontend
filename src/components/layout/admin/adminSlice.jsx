@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../services/axios";
+import api from "../../../services/axios";
 
 export const fetchProfile = createAsyncThunk(
   "admin/fetchProfile",
