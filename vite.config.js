@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "https://prms-backend-rrdo.onrender.com/",
+      // "/api": "http://localhost:5000",
     },
   },
 });
