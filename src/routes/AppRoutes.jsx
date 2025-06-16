@@ -1,13 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 
 import AdminLayout from "../pages/AdminLayout";
-import Dashboard from "../features/admin/Dashboard";
-import Patients from "../features/admin/Patients";
-import Appointments from "../features/admin/Appointments";
-import Users from "../features/admin/Users";
-import Reports from "../features/admin/Reports";
-import Settings from "../features/admin/Settings";
-import Logs from "../features/admin/Logs";
+import Dashboard from "../features/admin/dashboard/Dashboard";
+import Patients from "../features/admin/patients/Patients";
+import Appointments from "../features/admin/appointments/Appointments";
+import Users from "../features/admin/users/Users";
+import Reports from "../features/admin/reports/Reports";
+import Settings from "../features/admin/setting/Settings";
+import Logs from "../features/admin/log/Logs";
 import Landing from "../pages/Landing";
 import Login from "../features/auth/login/Login";
 import Signup from "../features/auth/signup/Signup";

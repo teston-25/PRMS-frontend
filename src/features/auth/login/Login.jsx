@@ -4,7 +4,7 @@ import AuthCard from "../../../components/forms/AuthCard";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { login, setLoading, setError } from "../authSlice";
-import authAPI from "../authAPI";
+import authAPI from "../../../API/authAPI";
 import { FaHome } from "react-icons/fa";
 
 export default function Login() {

@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { signup, setLoading, setError } from "../authSlice";
 import { FaHome } from "react-icons/fa";
-import authAPI from "../authAPI";
+import authAPI from "../../../API/authAPI";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
