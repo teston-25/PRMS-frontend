@@ -2,7 +2,7 @@ import api from "../services/axios";
 
 const patientAPI = {
   // GET /patient (admin, staff)
-  allPatients: async () => {
+  getAllPatients: async () => {
     const res = await api.get("/patient");
     return res.data;
   },
@@ -48,7 +48,7 @@ const patientAPI = {
   },
 
   // GET /patient/patients/search?q=term  (admin, staff)
-  searchPatients: async (searchedPatient) => {
+  searchPatient: async (searchedPatient) => {
     const res = await api.get(`/patient/patients/search?q=${searchedPatient}`);
     return res.data;
   },

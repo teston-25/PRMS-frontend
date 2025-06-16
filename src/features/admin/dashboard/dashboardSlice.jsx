@@ -8,9 +8,9 @@ export const fetchDashboardStats = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const [usersRes, patientsRes, appointmentsRes] = await Promise.all([
-        userAPI.allUsers(),
-        patientAPI.allPatients(),
-        appointmentAPI.allAppointments(),
+        userAPI.getAllUsers(),
+        patientAPI.getAllPatients(),
+        appointmentAPI.getAllAppointments(),
       ]);
 
       const activeUsers = usersRes.data.users.filter(
@@ -22,7 +22,7 @@ export const fetchDashboardStats = createAsyncThunk(
         activeUsers: activeUsers.length,
         totalPatients: patientsRes.results,
         totalAppointments: appointmentsRes.results,
-        recentPatients: patientsRes.data.patients.slice(0, 4),
+        recentPatients: patientsRes.data.patients.slice(-3),
       };
     } catch (error) {
       return thunkAPI.rejectWithValue(

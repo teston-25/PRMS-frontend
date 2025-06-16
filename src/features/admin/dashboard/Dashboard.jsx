@@ -12,7 +12,6 @@ import toast from "react-hot-toast";
 export default function Dashboard() {
   const dispatch = useDispatch();
   const { stats, loading, error } = useSelector((state) => {
-    console.log("Dashboard state from Redux:", state.dashboard);
     return state.dashboard;
   });
 
@@ -25,8 +24,6 @@ export default function Dashboard() {
       toast.error(error);
     }
   }, [error]);
-
-  console.log(stats);
 
   const cards = [
     {
