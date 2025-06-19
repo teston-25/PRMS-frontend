@@ -45,9 +45,9 @@ export const createPatient = createAsyncThunk(
 
 export const updatePatient = createAsyncThunk(
   "patients/update",
-  async ({ id, updates }, { rejectWithValue }) => {
+  async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const response = await patientAPI.updatePatient(id, updates);
+      const response = await patientAPI.updatePatient(id, updatedData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -122,11 +122,24 @@ const patientsSlice = createSlice({
       .addCase(fetchPatientById.fulfilled, (state, action) => {
         state.current = action.payload;
       })
+      .addCase(createPatient.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(createPatient.fulfilled, (state, action) => {
-        state.list.unshift(action.payload);
+        state.loading = false;
+        if (action.payload) {
+          state.list.push(action.payload);
+        }
         state.success = true;
       })
+      .addCase(createPatient.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(updatePatient.fulfilled, (state, action) => {
+        if (!action.payload) return;
+
         const index = state.list.findIndex((p) => p._id === action.payload._id);
         if (index !== -1) {
           state.list[index] = action.payload;

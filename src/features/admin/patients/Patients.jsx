@@ -106,98 +106,95 @@ const Patients = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left">
-            <thead className="text-xs text-gray-500 uppercase border-b">
-              <tr>
-                <th className="py-2">Patient</th>
-                <th>Contact</th>
-                <th>Age</th>
-                {/* <th>Last Visit</th> */}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <div className="max-h-[50vh] overflow-y-auto">
+            <table className="min-w-full text-sm text-left">
+              <thead className="text-xs text-gray-500 uppercase border-b sticky top-0 bg-white z-10">
                 <tr>
-                  <td colSpan="5" className="text-center py-6">
-                    Loading patients...
-                  </td>
+                  <th className="py-2">Patient</th>
+                  <th>Contact</th>
+                  <th>Age</th>
+                  {/* <th>Last Visit</th> */}
+                  <th>Actions</th>
                 </tr>
-              ) : displayedPatients.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="text-center py-6">
-                    {searchTerm.trim()
-                      ? "No matching patients found"
-                      : "No patients found"}
-                  </td>
-                </tr>
-              ) : (
-                displayedPatients.map((p) => (
-                  <tr key={p._id} className="border-b hover:bg-gray-50">
-                    <td className="py-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="bg-blue-100 text-blue-700 rounded-full w-10 h-10 flex items-center justify-center font-semibold">
-                          {(p.firstName || "NA")
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()}
-                          {(p.lastName || "NA")
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-800">
-                            {p.firstName} {p.lastName}
-                          </div>
-                          <div className="text-gray-500 text-sm">
-                            {p.gender}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="text-gray-800">{p.email}</div>
-                      <div className="text-gray-500 text-sm">{p.phone}</div>
-                    </td>
-                    <td>
-                      {p.age} yrs
-                      <div className="text-gray-500 text-xs">
-                        Born {new Date(p.dob).toLocaleDateString()}
-                      </div>
-                    </td>
-                    {/* <td>
-                      {p.lastVisit
-                        ? new Date(p.lastVisit).toLocaleDateString()
-                        : "-"}
-                    </td> */}
-                    <td className="flex gap-2 py-2">
-                      <Link
-                        to={`/admin/patients/${p._id}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <EyeIcon className="h-5 w-5" />
-                      </Link>
-                      <Link
-                        to={`/admin/patients/edit/${p._id}`}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        <PencilSquareIcon className="h-5 w-5" />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(p._id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-6">
+                      Loading patients...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : displayedPatients.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-6">
+                      {searchTerm.trim()
+                        ? "No matching patients found"
+                        : "No patients found"}
+                    </td>
+                  </tr>
+                ) : (
+                  displayedPatients.map((p) => (
+                    <tr key={p._id} className="border-b hover:bg-gray-50">
+                      <td className="py-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-blue-100 text-blue-700 rounded-full w-10 h-10 flex items-center justify-center font-semibold">
+                            {(p.firstName || "NA")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                            {(p.lastName || "NA")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-800">
+                              {p.firstName} {p.lastName}
+                            </div>
+                            <div className="text-gray-500 text-sm">
+                              {p.gender}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="text-gray-800">{p.email}</div>
+                        <div className="text-gray-500 text-sm">{p.phone}</div>
+                      </td>
+                      <td>
+                        {p.age} yrs
+                        <div className="text-gray-500 text-xs">
+                          Born {new Date(p.dob).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="flex gap-2 py-2">
+                        <Link
+                          to={`/admin/patients/${p._id}`}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <EyeIcon className="h-5 w-5" />
+                        </Link>
+                        <Link
+                          to={`/admin/patients/edit/${p._id}`}
+                          className="text-gray-600 hover:text-gray-800"
+                        >
+                          <PencilSquareIcon className="h-5 w-5" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(p._id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <p className="mt-3 text-xs text-gray-500">

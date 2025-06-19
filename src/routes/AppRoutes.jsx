@@ -16,6 +16,9 @@ import ResetPass from "../features/auth/login/ResetPass";
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "./ProtectedRoutes";
 import Profile from "../pages/Profile";
+import AddPatientForm from "../features/admin/patients/AddPatientForm";
+import EditPatientForm from "../features/admin/patients/EditPatientForm";
+import ViewPatientProfile from "../features/admin/patients/ViewPatientProfile";
 
 export default function AppRoutes() {
   return (
@@ -41,6 +44,10 @@ export default function AppRoutes() {
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="logs" element={<Logs />} />
+          <Route path="patients/add" element={<AddPatientForm />} />
+          <Route path="patients/edit/:id" element={<EditPatientForm />} />
+          <Route path="patients/:id" element={<ViewPatientProfile />} />
+          {/* <Route path="patients/:id" element={<Appointments />} /> */}
         </Route>
       </Route>
       {/* staff Routes */}
