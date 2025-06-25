@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   CalendarIcon,
@@ -7,7 +7,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
-import { fetchAppointments } from "./appointmentSlice";
+import { fetchAppointments, fetchTodaysAppointments } from "./appointmentSlice";
 import { Link } from "react-router-dom";
 
 const Appointments = () => {
@@ -15,49 +15,85 @@ const Appointments = () => {
   const appointmentsState = useSelector((state) => state.appointments);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  // Safely extract appointments
-  const appointments = appointmentsState ? appointmentsState.appointments : [];
-
+  const appointments = appointmentsState?.appointments || [];
+  const todaysAppointments = appointmentsState?.todaysAppointments || [];
   const loading = appointmentsState?.loading || false;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toLocaleDateString()
+    new Date().toISOString().split("T")[0]
   );
   const [statusFilter, setStatusFilter] = useState("All Status");
 
   useEffect(() => {
-    dispatch(fetchAppointments());
-  }, [dispatch]);
+    if (appointments.length === 0 && todaysAppointments.length === 0) {
+      dispatch(fetchAppointments());
+      dispatch(fetchTodaysAppointments());
+    }
+  }, [dispatch, appointments.length, todaysAppointments.length]);
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const patientName = `${appointment?.patient?.firstName || ""} ${
-      appointment?.patient?.lastName || ""
-    }`.toLowerCase();
-    const doctorName = appointment?.asignedTo?.fullName?.toLowerCase() || "";
-    const appointmentDate = appointment?.date || "";
-    const appointmentStatus = appointment?.status || "";
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appointment) => {
+      const patientName = `${appointment?.patient?.firstName || ""} ${
+        appointment?.patient?.lastName || ""
+      }`.toLowerCase();
 
-    const matchesSearch =
-      patientName.includes(searchTerm.toLowerCase()) ||
-      doctorName.includes(searchTerm.toLowerCase());
+      const doctorName = (appointment?.asignedTo?.fullName || "").toLowerCase();
 
-    const matchesDate =
-      selectedDate === "All Dates" || appointmentDate === selectedDate;
+      const appointmentDate = appointment?.date
+        ? new Date(appointment.date).toISOString().split("T")[0]
+        : "";
 
-    const matchesStatus =
-      statusFilter === "All Status" || appointmentStatus === statusFilter;
+      const currentSelectedDate =
+        selectedDate === "All Dates"
+          ? null
+          : new Date(selectedDate).toISOString().split("T")[0];
 
-    return matchesSearch && matchesDate && matchesStatus;
-  });
+      const statusMap = {
+        pending: "Scheduled",
+        confirmed: "In Progress",
+        completed: "Completed",
+        cancelled: "Cancelled",
+      };
 
-  const statusCounts = {
-    Total: appointments.length,
-    Scheduled: appointments.filter((a) => a?.status === "pending").length,
-    "In progress": appointments.filter((a) => a?.status === "confirmed").length,
-    Completed: appointments.filter((a) => a?.status === "completed").length,
-    Cancelled: appointments.filter((a) => a?.status === "cancelled").length,
-  };
+      const normalizedAppointmentStatus =
+        statusMap[appointment?.status?.toLowerCase()] || appointment?.status;
+
+      const matchesSearch =
+        searchTerm === "" ||
+        patientName.includes(searchTerm.toLowerCase()) ||
+        doctorName.includes(searchTerm.toLowerCase());
+
+      const matchesDate =
+        !currentSelectedDate || appointmentDate === currentSelectedDate;
+
+      const matchesStatus =
+        statusFilter === "All Status" ||
+        normalizedAppointmentStatus === statusFilter;
+
+      return matchesSearch && matchesDate && matchesStatus;
+    });
+  }, [appointments, searchTerm, selectedDate, statusFilter]);
+  console.log(filteredAppointments);
+
+  const statusCounts = useMemo(
+    () => ({
+      Total: filteredAppointments.length,
+      Scheduled: filteredAppointments.filter((a) =>
+        ["pending", "Scheduled"].includes(a?.status?.toLowerCase())
+      ).length,
+      "In Progress": filteredAppointments.filter((a) =>
+        ["confirmed", "In Progress"].includes(a?.status?.toLowerCase())
+      ).length,
+      Completed: filteredAppointments.filter((a) =>
+        ["completed", "Completed"].includes(a?.status?.toLowerCase())
+      ).length,
+      Cancelled: filteredAppointments.filter((a) =>
+        ["cancelled", "Cancelled"].includes(a?.status?.toLowerCase())
+      ).length,
+    }),
+    [filteredAppointments]
+  );
 
   if (loading) {
     return (
@@ -77,7 +113,7 @@ const Appointments = () => {
         </p>
       </div>
 
-      {/* Status Cards - Responsive grid */}
+      {/* Status Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
         {Object.entries(statusCounts).map(([status, count]) => (
           <div
@@ -90,22 +126,61 @@ const Appointments = () => {
         ))}
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-3 mb-4 sm:mb-6">
-        {/* Mobile filter toggle */}
-        <button
-          className="sm:hidden flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-          onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-        >
-          <span>Filters</span>
-          {isMobileFiltersOpen ? (
-            <ChevronUpIcon className="h-5 w-5" />
-          ) : (
-            <ChevronDownIcon className="h-5 w-5" />
-          )}
-        </button>
+      {/* Search and Filters - Desktop */}
+      <div className="hidden sm:flex gap-3 mb-4 sm:mb-6">
+        {/* Search */}
+        <div className="relative flex-1">
+          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by patient or doctor name..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-        {/* Search bar - always visible */}
+        {/* Date Filter */}
+        <div className="relative w-48">
+          <CalendarIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <select
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          >
+            <option value={new Date().toLocaleDateString()}>
+              {new Date().toLocaleDateString()}
+            </option>
+            <option value="All Dates">All Dates</option>
+          </select>
+        </div>
+
+        {/* Status Filter */}
+        <select
+          className="w-48 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="All Status">All Status</option>
+          <option value="Pending">Scheduled</option>
+          <option value="Confirmed">In progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        {/* Add Button */}
+        <Link
+          to="/admin/appointments/add"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap"
+        >
+          <PlusIcon className="h-5 w-5" />
+          Add Appointment
+        </Link>
+      </div>
+
+      {/* Mobile View */}
+      <div className="sm:hidden flex flex-col gap-3 mb-4 sm:mb-6">
+        {/* Search bar */}
         <div className="relative">
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -117,45 +192,22 @@ const Appointments = () => {
           />
         </div>
 
-        {/* Filters - Desktop */}
-        <div className="hidden sm:flex gap-3">
-          <div className="relative flex items-center flex-1 max-w-xs">
-            <CalendarIcon className="absolute left-3 h-5 w-5 text-gray-400" />
-            <select
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            >
-              <option value={new Date().toLocaleDateString()}>
-                {new Date().toLocaleDateString()}
-              </option>
-              <option value="All Dates">All Dates</option>
-            </select>
-          </div>
-          <select
-            className="flex-1 max-w-xs px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="All Status">All Status</option>
-            <option value="Pending">Scheduled</option>
-            <option value="Confirmed">In progress</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-          <Link
-            to="/admin/appointments/add"
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 min-w-[120px]"
-          >
-            <PlusIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">Add Appointment</span>
-            <span className="sm:hidden">Add</span>
-          </Link>
-        </div>
+        {/* Mobile filter toggle */}
+        <button
+          className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+          onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+        >
+          <span>Filters</span>
+          {isMobileFiltersOpen ? (
+            <ChevronUpIcon className="h-5 w-5" />
+          ) : (
+            <ChevronDownIcon className="h-5 w-5" />
+          )}
+        </button>
 
         {/* Filters - Mobile (collapsible) */}
         {isMobileFiltersOpen && (
-          <div className="sm:hidden space-y-3 bg-gray-50 p-3 rounded-lg">
+          <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
             <div className="relative flex items-center">
               <CalendarIcon className="absolute left-3 h-5 w-5 text-gray-400" />
               <select
@@ -175,15 +227,18 @@ const Appointments = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="All Status">All Status</option>
-              <option value="Scheduled">Pending</option>
-              <option value="In Progress">Confirmed</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="Pending">Scheduled</option>
+              <option value="Confirmed">In progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
-            <button className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <Link
+              to="/admin/appointments/add"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
               <PlusIcon className="h-5 w-5" />
               <span>Add Appointment</span>
-            </button>
+            </Link>
           </div>
         )}
       </div>
@@ -225,25 +280,25 @@ const Appointments = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAppointments.map((appointment) => (
-                    <tr key={appointment.id}>
+                    <tr key={appointment._id}>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         {appointment.patient.firstName}{" "}
                         {appointment.patient.lastName}
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        Dr. {appointment.asignedTo.fullName}
+                        Dr. {appointment.assignedTo.fullName}
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        {appointment.date}
+                        {new Date(appointment.date).toLocaleString()}
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
-                            appointment.status === "Scheduled"
+                            appointment.status === "pending"
                               ? "bg-blue-100 text-blue-800"
-                              : appointment.status === "In Progress"
+                              : appointment.status === "confirmed"
                               ? "bg-yellow-100 text-yellow-800"
-                              : appointment.status === "Completed"
+                              : appointment.status === "completed"
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
                           }`}
@@ -268,14 +323,14 @@ const Appointments = () => {
                         {appointment.patient.lastName}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Dr. {appointment.asignedTo.fullName}
+                        Dr. {appointment.assignedTo.fullName}
                       </p>
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        appointment.status === "Scheduled"
+                        appointment.status === "pending"
                           ? "bg-blue-100 text-blue-800"
-                          : appointment.status === "In Progress"
+                          : appointment.status === "confirmed"
                           ? "bg-yellow-100 text-yellow-800"
                           : appointment.status === "Completed"
                           ? "bg-green-100 text-green-800"

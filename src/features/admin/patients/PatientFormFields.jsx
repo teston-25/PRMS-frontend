@@ -10,7 +10,7 @@ const PatientFormFields = ({ formData, setFormData, readOnly = false }) => {
 
   return (
     <div className="space-y-6">
-      <BackButton to="/admin/patients" className="mb-4" />
+      <BackButton className="mb-4" />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="space-y-2">

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addAppointment } from "./appointmentSlice";
 import { useNavigate } from "react-router-dom";
 import { fetchUsers } from "../users/userSlice";
+import BackButton from "../../../components/common/BackButton";
 import toast from "react-hot-toast";
 
 export default function AddAppointment() {
@@ -14,17 +15,17 @@ export default function AddAppointment() {
     error: usersError,
   } = useSelector((state) => state.users);
 
-  // Filter doctors only once when users change
   const doctors = users.filter((user) => user.role === "doctor");
 
+  // Initialize with current date and time
   const [formData, setFormData] = useState({
     patient: {
       email: "",
       phone: "",
     },
-    date: "",
-    time: "",
-    doctor: "",
+    date: new Date().toISOString().split("T")[0],
+    time: new Date().toTimeString().slice(0, 5),
+    assignedTo: null,
     reason: "Routine Checkups & Cleanings",
     status: "Scheduled",
   });
@@ -54,24 +55,44 @@ export default function AddAppointment() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const selectedDoctor = doctors.find((d) => d.fullName === formData.doctor);
+
+    if (!selectedDoctor) {
+      toast.error("Please select a valid doctor");
+      return;
+    }
+
+    const dateTime = new Date(
+      `${formData.date}T${formData.time}:00`
+    ).toISOString();
 
     const appointmentData = {
       patient: {
         email: formData.patient.email,
         phone: formData.patient.phone,
       },
-      date: new Date(`${formData.date}`).toISOString(),
-      doctor: formData.doctor,
+      assignedTo: selectedDoctor._id,
+      date: dateTime,
       reason: formData.reason,
-      status: formData.status,
+      status: formData.status.toLowerCase(),
     };
+    console.log(appointmentData);
 
-    dispatch(addAppointment(appointmentData)).then(() => {
-      navigate("/admin/appointments");
-      toast.success("Appointment has added succesfully!");
-    });
+    try {
+      const resultAction = await dispatch(addAppointment(appointmentData));
+      if (addAppointment.fulfilled.match(resultAction)) {
+        toast.success("Appointment added successfully!");
+        navigate("/admin/appointments");
+      } else {
+        throw new Error(resultAction.error.message);
+      }
+    } catch (error) {
+      toast.error(`Failed to add appointment: ${error.message}`);
+      console.error("Appointment creation error:", error);
+    }
   };
 
   const reasonOptions = [
@@ -128,6 +149,19 @@ export default function AddAppointment() {
               required
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Time
+            </label>
+            <input
+              type="time"
+              name="time"
+              value={formData.time}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
         </div>
 
         {/* Doctor Selection */}
@@ -145,9 +179,8 @@ export default function AddAppointment() {
           >
             <option value="">Select Doctor</option>
             {doctors.map((doctor) => (
-              <option key={doctor._id} value={doctor._id}>
+              <option key={doctor._id} value={doctor.fullName}>
                 {doctor.fullName}{" "}
-                {doctor.specialization && `(${doctor.specialization})`}
               </option>
             ))}
           </select>
@@ -196,13 +229,7 @@ export default function AddAppointment() {
 
         {/* Form Actions */}
         <div className="flex justify-between items-center pt-4">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/appointments")}
-            className="text-gray-600 hover:underline"
-          >
-            ← Back
-          </button>
+          <BackButton className="mb-4" />
           <button
             type="submit"
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

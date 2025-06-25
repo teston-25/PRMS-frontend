@@ -9,7 +9,7 @@ const appointmentAPI = {
 
   // POST /appointments (admin, staff)
   addAppointment: async (newAppointment) => {
-    const response = await api.post("/appointments", { newAppointment });
+    const response = await api.post("/appointments", newAppointment);
     console.log(response.data);
     return response.data;
   },
@@ -17,7 +17,6 @@ const appointmentAPI = {
   // GET /appointments/today (admin, staff)
   getTodaysAppointments: async () => {
     const response = await api.get("/appointments/today");
-    console.log(response.data);
     return response.data;
   },
 

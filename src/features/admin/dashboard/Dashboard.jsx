@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDashboardStats } from "./dashboardSlice";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -110,9 +111,12 @@ export default function Dashboard() {
                       {patient.gender}, {patient.age} yrs
                     </p>
                   </div>
-                  <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-sm transition-colors">
+                  <Link
+                    to={`/admin/patients/${patient._id}`}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg text-sm transition-colors"
+                  >
                     View Profile
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
