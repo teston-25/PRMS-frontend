@@ -8,6 +8,7 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import { fetchAppointments } from "./appointmentSlice";
+import { Link } from "react-router-dom";
 
 const Appointments = () => {
   const dispatch = useDispatch();
@@ -15,11 +16,7 @@ const Appointments = () => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Safely extract appointments
-  const appointments = Array.isArray(appointmentsState?.data)
-    ? appointmentsState.data
-    : Array.isArray(appointmentsState?.appointments)
-    ? appointmentsState.appointments
-    : [];
+  const appointments = appointmentsState ? appointmentsState.appointments : [];
 
   const loading = appointmentsState?.loading || false;
 
@@ -56,11 +53,10 @@ const Appointments = () => {
 
   const statusCounts = {
     Total: appointments.length,
-    Scheduled: appointments.filter((a) => a?.status === "Scheduled").length,
-    "In Progress": appointments.filter((a) => a?.status === "In Progress")
-      .length,
-    Completed: appointments.filter((a) => a?.status === "Completed").length,
-    Cancelled: appointments.filter((a) => a?.status === "Cancelled").length,
+    Scheduled: appointments.filter((a) => a?.status === "pending").length,
+    "In progress": appointments.filter((a) => a?.status === "confirmed").length,
+    Completed: appointments.filter((a) => a?.status === "completed").length,
+    Cancelled: appointments.filter((a) => a?.status === "cancelled").length,
   };
 
   if (loading) {
@@ -142,16 +138,19 @@ const Appointments = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="All Status">All Status</option>
-            <option value="Scheduled">Scheduled</option>
-            <option value="In Progress">In Progress</option>
+            <option value="Pending">Scheduled</option>
+            <option value="Confirmed">In progress</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
-          <button className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 min-w-[120px]">
+          <Link
+            to="/admin/appointments/add"
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 min-w-[120px]"
+          >
             <PlusIcon className="h-5 w-5" />
             <span className="hidden sm:inline">Add Appointment</span>
             <span className="sm:hidden">Add</span>
-          </button>
+          </Link>
         </div>
 
         {/* Filters - Mobile (collapsible) */}
@@ -176,8 +175,8 @@ const Appointments = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="All Status">All Status</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="In Progress">In Progress</option>
+              <option value="Scheduled">Pending</option>
+              <option value="In Progress">Confirmed</option>
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>

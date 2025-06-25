@@ -3,7 +3,7 @@ import userAPI from "../../../API/userAPI";
 
 export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
   const response = await userAPI.getAllUsers();
-  return response;
+  return response.data.users;
 });
 
 export const updateUserRole = createAsyncThunk(

@@ -92,7 +92,7 @@ const UsersList = () => {
 
         <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           <PlusIcon className="h-5 w-5" />
-          <span className="hidden md:inline">Add User</span>
+          <span className="hidden sm:inline md:inline">Add User</span>
         </button>
       </div>
 

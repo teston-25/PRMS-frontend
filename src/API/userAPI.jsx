@@ -4,8 +4,7 @@ const userAPI = {
   // GET /users (admin, staff)
   getAllUsers: async () => {
     const response = await api.get("/users");
-    console.log(response.data.data.users);
-    return response.data.data.users;
+    return response.data;
   },
 
   // PATCH /users/:id/role (admin)

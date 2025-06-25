@@ -4,12 +4,13 @@ const appointmentAPI = {
   // GET /appointments (admin, staff)
   getAllAppointments: async () => {
     const response = await api.get("/appointments");
-    return response.data.data.appointments;
+    return response.data;
   },
 
   // POST /appointments (admin, staff)
   addAppointment: async (newAppointment) => {
     const response = await api.post("/appointments", { newAppointment });
+    console.log(response.data);
     return response.data;
   },
 

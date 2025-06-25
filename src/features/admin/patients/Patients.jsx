@@ -9,6 +9,7 @@ import {
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
+import { PlusIcon } from "lucide-react";
 
 const Patients = () => {
   const dispatch = useDispatch();
@@ -88,9 +89,11 @@ const Patients = () => {
         )}
         <Link
           to="/admin/patients/add"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm"
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 min-w-[120px]"
         >
-          + Add Patient
+          <PlusIcon className="h-5 w-5" />
+          <span className="hidden sm:inline">Add Patient</span>
+          <span className="sm:hidden">Add</span>
         </Link>
       </div>
 
