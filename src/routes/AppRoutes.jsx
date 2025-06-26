@@ -19,7 +19,8 @@ import Profile from "../pages/Profile";
 import AddPatientForm from "../features/admin/patients/AddPatientForm";
 import EditPatientForm from "../features/admin/patients/EditPatientForm";
 import ViewPatientProfile from "../features/admin/patients/ViewPatientProfile";
-import AddAppointment from "../features/admin/appointments/addAppointment";
+import AddAppointment from "../features/admin/appointments/AddAppointment";
+import ViewAppointment from "../features/admin/appointments/ViewAppointment";
 
 export default function AppRoutes() {
   return (
@@ -49,6 +50,7 @@ export default function AppRoutes() {
           <Route path="patients/edit/:id" element={<EditPatientForm />} />
           <Route path="patients/:id" element={<ViewPatientProfile />} />
           <Route path="appointments/add" element={<AddAppointment />} />
+          <Route path="appointments/view" element={<ViewAppointment />} />
         </Route>
       </Route>
       {/* staff Routes */}

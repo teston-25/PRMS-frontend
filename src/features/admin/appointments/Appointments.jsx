@@ -6,6 +6,9 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { fetchAppointments, fetchTodaysAppointments } from "./appointmentSlice";
 import { Link } from "react-router-dom";
@@ -38,7 +41,9 @@ const Appointments = () => {
         appointment?.patient?.lastName || ""
       }`.toLowerCase();
 
-      const doctorName = (appointment?.asignedTo?.fullName || "").toLowerCase();
+      const doctorName = (
+        appointment?.assignedTo?.fullName || ""
+      ).toLowerCase();
 
       const appointmentDate = appointment?.date
         ? new Date(appointment.date).toISOString().split("T")[0]
@@ -74,7 +79,6 @@ const Appointments = () => {
       return matchesSearch && matchesDate && matchesStatus;
     });
   }, [appointments, searchTerm, selectedDate, statusFilter]);
-  console.log(filteredAppointments);
 
   const statusCounts = useMemo(
     () => ({
@@ -94,6 +98,12 @@ const Appointments = () => {
     }),
     [filteredAppointments]
   );
+
+  const handleDelete = (appointmentId) => {
+    // Add your delete logic here
+    console.log("Delete appointment:", appointmentId);
+    // dispatch(deleteAppointment(appointmentId));
+  };
 
   if (loading) {
     return (
@@ -261,61 +271,89 @@ const Appointments = () => {
           <>
             {/* Desktop Table */}
             <div className="hidden sm:block">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Patient
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Doctor
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredAppointments.map((appointment) => (
-                    <tr key={appointment._id}>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        {appointment.patient.firstName}{" "}
-                        {appointment.patient.lastName}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        Dr. {appointment.assignedTo.fullName}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        {new Date(appointment.date).toLocaleString()}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            appointment.status === "pending"
-                              ? "bg-blue-100 text-blue-800"
-                              : appointment.status === "confirmed"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : appointment.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {appointment.status}
-                        </span>
-                      </td>
+              <div className="max-h-[35vh] overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Patient
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Doctor
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date & Time
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAppointments.map((appointment) => (
+                      <tr key={appointment._id}>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          {appointment.patient.firstName}{" "}
+                          {appointment.patient.lastName}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          Dr. {appointment.assignedTo.fullName}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          {new Date(appointment.date).toLocaleString()}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              appointment.status === "pending"
+                                ? "bg-blue-100 text-blue-800"
+                                : appointment.status === "confirmed"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : appointment.status === "completed"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {appointment.status}
+                          </span>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap flex gap-2">
+                          <Link
+                            to={`/admin/appointments/view/${appointment._id}`}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View"
+                          >
+                            <EyeIcon className="h-5 w-5" />
+                          </Link>
+                          <Link
+                            to={`/admin/appointments/edit/${appointment._id}`}
+                            className="text-gray-600 hover:text-gray-800"
+                            title="Edit"
+                          >
+                            <PencilSquareIcon className="h-5 w-5" />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(appointment._id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Mobile Cards */}
-            <div className="sm:hidden divide-y divide-gray-200">
+            <div className="sm:hidden divide-y divide-gray-200 max-h-[54vh] overflow-y-auto">
               {filteredAppointments.map((appointment) => (
-                <div key={appointment.id} className="p-3">
+                <div key={appointment._id} className="p-3">
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-medium">
@@ -332,7 +370,7 @@ const Appointments = () => {
                           ? "bg-blue-100 text-blue-800"
                           : appointment.status === "confirmed"
                           ? "bg-yellow-100 text-yellow-800"
-                          : appointment.status === "Completed"
+                          : appointment.status === "completed"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
@@ -341,7 +379,30 @@ const Appointments = () => {
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500">
-                    {appointment.date}
+                    {new Date(appointment.date).toLocaleString()}
+                  </div>
+                  <div className="mt-2 flex justify-end gap-3">
+                    <Link
+                      to={`/admin/appointments/view/${appointment._id}`}
+                      className="text-blue-600 hover:text-blue-900"
+                      title="View"
+                    >
+                      <EyeIcon className="h-5 w-5" />
+                    </Link>
+                    <Link
+                      to={`/admin/appointments/edit/${appointment._id}`}
+                      className="text-yellow-600 hover:text-yellow-900"
+                      title="Edit"
+                    >
+                      <PencilSquareIcon className="h-5 w-5" />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(appointment._id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
                   </div>
                 </div>
               ))}
