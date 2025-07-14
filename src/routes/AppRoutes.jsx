@@ -21,7 +21,10 @@ import EditPatientForm from "../features/admin/patients/EditPatientForm";
 import ViewPatientProfile from "../features/admin/patients/ViewPatientProfile";
 import AddAppointment from "../features/admin/appointments/AddAppointment";
 import ViewAppointment from "../features/admin/appointments/ViewAppointment";
-
+import EditAppointment from "../features/admin/appointments/EditAppointment";
+import AddUser from "../features/admin/users/AddUser";
+import ViewUser from "../features/admin/users/ViewUser";
+import EditUser from "../features/admin/users/EditUser";
 export default function AppRoutes() {
   return (
     <Routes>
@@ -41,16 +44,24 @@ export default function AppRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="patients" element={<Patients />} />
-          <Route path="appointments" element={<Appointments />} />
-          <Route path="users" element={<Users />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="logs" element={<Logs />} />
           <Route path="patients/add" element={<AddPatientForm />} />
           <Route path="patients/edit/:id" element={<EditPatientForm />} />
           <Route path="patients/:id" element={<ViewPatientProfile />} />
+          <Route path="appointments" element={<Appointments />} />
           <Route path="appointments/add" element={<AddAppointment />} />
-          <Route path="appointments/view" element={<ViewAppointment />} />
+          <Route path="appointments/view/:id" element={<ViewAppointment />} />
+          <Route
+            path="appointments/edit/:id"
+            element={<EditAppointment />}
+          />{" "}
+          <Route path="users" element={<Users />} />
+          <Route path="users/add" element={<AddUser />} />
+          <Route path="users/view/:id" element={<ViewUser />} />
+          <Route path="users/edit/:id" element={<EditUser />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="logs" element={<Logs />} />
+          {/* <Route path="profile" element={<Profile />} /> */}
         </Route>
       </Route>
       {/* staff Routes */}

@@ -10,7 +10,8 @@ import {
 } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
 import { PlusIcon } from "lucide-react";
-
+import toast from "react-hot-toast";
+import Spinner from "../../../components/common/Spinner";
 const Patients = () => {
   const dispatch = useDispatch();
   const {
@@ -60,6 +61,7 @@ const Patients = () => {
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete this patient?")) {
       dispatch(deletePatient(id));
+      toast.success("Patient has been removed");
     }
   };
 
@@ -124,7 +126,7 @@ const Patients = () => {
                 {loading ? (
                   <tr>
                     <td colSpan="5" className="text-center py-6">
-                      Loading patients...
+                      <Spinner />
                     </td>
                   </tr>
                 ) : displayedPatients.length === 0 ? (

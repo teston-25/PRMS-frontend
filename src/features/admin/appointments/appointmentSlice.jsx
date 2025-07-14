@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createAction } from "@reduxjs/toolkit";
 import appointmentsAPI from "../../../API/appointmentAPI";
 
 // Async Thunks
@@ -58,12 +58,23 @@ export const fetchAppointmentsByPatient = createAsyncThunk(
   }
 );
 
+export const fetchAppointmentById = createAsyncThunk(
+  "appointments/fetchAppointmentById",
+  async (id) => {
+    const response = await appointmentsAPI.getAppointmentById(id);
+    return response.data;
+  }
+);
+
+export const clearAppointmentError = createAction("appointments/clearError");
+
 const appointmentsSlice = createSlice({
   name: "appointments",
   initialState: {
     appointments: [],
     todaysAppointments: [],
     patientAppointments: [],
+    currentAppointment: [],
     loading: false,
     error: null,
     status: "idle",
@@ -78,10 +89,18 @@ const appointmentsSlice = createSlice({
     clearPatientAppointments: (state) => {
       state.patientAppointments = [];
     },
+    clearCurrentAppointment: (state) => {
+      state.currentAppointment = null;
+    },
+    resetAppointmentState: (state) => {
+      state.currentAppointment = null;
+      state.loading = "idle";
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     const handlePending = (state) => {
-      state.loading = true;
+      state.loading = "pending";
       state.error = null;
       state.status = "loading";
     };
@@ -158,10 +177,26 @@ const appointmentsSlice = createSlice({
       .addCase(fetchAppointmentsByPatient.pending, handlePending)
       .addCase(fetchAppointmentsByPatient.fulfilled, (state, action) => {
         state.loading = false;
-        state.patientAppointments = action.payload.appointments;
+        const existingIndex = state.appointments.findIndex(
+          (a) => a._id === action.payload._id
+        );
+        if (existingIndex >= 0) {
+          state.appointments[existingIndex] = action.payload;
+        } else {
+          state.appointments.push(action.payload);
+        }
         state.status = "succeeded";
       })
-      .addCase(fetchAppointmentsByPatient.rejected, handleRejected);
+      .addCase(fetchAppointmentsByPatient.rejected, handleRejected)
+
+      // Single appointment by ID
+      .addCase(fetchAppointmentById.pending, handlePending)
+      .addCase(fetchAppointmentById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentAppointment = action.payload.appointment || action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(fetchAppointmentById.rejected, handleRejected);
   },
 });
 
@@ -169,5 +204,7 @@ export const {
   clearAppointments,
   clearTodaysAppointments,
   clearPatientAppointments,
+  clearCurrentAppointment,
+  resetAppointmentState,
 } = appointmentsSlice.actions;
 export default appointmentsSlice.reducer;

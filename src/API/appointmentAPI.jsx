@@ -7,6 +7,12 @@ const appointmentAPI = {
     return response.data;
   },
 
+  // GET /appointments/:id (admin, staff)
+  getAppointmentById: async (id) => {
+    const response = await api.get(`/appointments/${id}`);
+    return response.data;
+  },
+
   // POST /appointments (admin, staff)
   addAppointment: async (newAppointment) => {
     const response = await api.post("/appointments", newAppointment);

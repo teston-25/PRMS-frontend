@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchDashboardStats } from "./dashboardSlice";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import Spinner from "../../../components/common/Spinner";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -64,7 +65,7 @@ export default function Dashboard() {
       </h2>
 
       {loading ? (
-        <p className="text-gray-600">Loading dashboard data...</p>
+        <Spinner />
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">

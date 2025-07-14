@@ -6,6 +6,11 @@ const userAPI = {
     const response = await api.get("/users");
     return response.data;
   },
+  // GET /users (admin, staff)
+  getUserById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
 
   // PATCH /users/:id/role (admin)
   updateUserRole: async (id, role) => {

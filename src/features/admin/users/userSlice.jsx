@@ -1,10 +1,23 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import userAPI from "../../../API/userAPI";
+import { signup } from "../../auth/authSlice";
 
 export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
   const response = await userAPI.getAllUsers();
   return response.data.users;
 });
+
+export const fetchUserById = createAsyncThunk(
+  "users/fetchUserById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await userAPI.getUserById(id);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response.data);
+    }
+  }
+);
 
 export const updateUserRole = createAsyncThunk(
   "users/updateRole",
@@ -42,6 +55,14 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
+export const addNewUser = createAsyncThunk(
+  "users/addNewUser",
+  async (userData) => {
+    const response = await signup.post("/users", userData);
+    return response.data;
+  }
+);
+
 const userSlice = createSlice({
   name: "users",
   initialState: {
@@ -57,6 +78,11 @@ const userSlice = createSlice({
     },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
+    },
+    resetUserState: (state) => {
+      state.loading = "idle";
+      state.error = null;
+      state.success = false;
     },
   },
   extraReducers: (builder) => {
@@ -92,7 +118,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { setFilter, setSearchTerm } = userSlice.actions;
+export const { setFilter, setSearchTerm, resetUserState } = userSlice.actions;
 
 export const selectAllUsers = (state) => state.users.users;
 export const selectFilteredUsers = (state) => {

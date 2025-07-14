@@ -10,6 +10,8 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import { fetchUsers, deleteUser } from "./userSlice";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const UsersList = () => {
   const dispatch = useDispatch();
@@ -17,29 +19,65 @@ const UsersList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [prevUsersLength, setPrevUsersLength] = useState(0);
+  const [roleFilter, setRoleFilter] = useState("All Roles");
+  const [statusFilter, setStatusFilter] = useState("All Status");
 
   useEffect(() => {
-    dispatch(fetchUsers());
-  }, [dispatch]);
+    if (users.length === 0 && prevUsersLength === 0) {
+      dispatch(fetchUsers());
+      return;
+    }
+
+    if (users.length < prevUsersLength) {
+      dispatch(fetchUsers());
+    }
+
+    setPrevUsersLength(users.length);
+  }, [dispatch, users.length, prevUsersLength]);
 
   const safeUsers = Array.isArray(users) ? users : [];
   const filteredUsers = safeUsers.filter((user) => {
     const fullName = `${user?.fullName || ""}`.toLowerCase();
     const email = user?.email?.toLowerCase() || "";
-    return (
+
+    // Search filter
+    const matchesSearch =
+      searchTerm === "" ||
       fullName.includes(searchTerm.toLowerCase()) ||
-      email.includes(searchTerm.toLowerCase())
-    );
+      email.includes(searchTerm.toLowerCase());
+
+    // Role filter
+    const matchesRole =
+      roleFilter === "All Roles" ||
+      user?.role?.toLowerCase() === roleFilter.toLowerCase();
+
+    // Status filter
+    const matchesStatus =
+      statusFilter === "All Status" ||
+      (statusFilter === "Active" && user?.active === true) ||
+      (statusFilter === "Inactive" && user?.active === false);
+
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      dispatch(deleteUser(id));
+      dispatch(deleteUser(id))
+        .unwrap()
+        .then(() => {
+          toast.success("User has been removed!");
+        })
+        .catch((error) => {
+          toast.error("Failed to delete user");
+          console.error("Failed to delete user:", error);
+        });
     }
   };
 
-  if (status === "loading")
+  if (status === "loading") {
     return <div className="flex justify-center py-8">Loading users...</div>;
+  }
 
   return (
     <div className="p-4">
@@ -76,24 +114,35 @@ const UsersList = () => {
         </button>
 
         <div className={`${showFilters ? "block" : "hidden"} md:flex gap-4`}>
-          <select className="border rounded-lg px-4 py-2">
-            <option>All Roles</option>
-            <option>Admin</option>
-            <option>Staff</option>
-            <option>Doctor</option>
-            <option>User</option>
+          <select
+            className="border rounded-lg px-4 py-2"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="All Roles">All Roles</option>
+            <option value="Admin">Admin</option>
+            <option value="Staff">Staff</option>
+            <option value="Doctor">Doctor</option>
+            <option value="User">User</option>
           </select>
-          <select className="border rounded-lg px-4 py-2">
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select
+            className="border rounded-lg px-4 py-2"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="All Status">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
           </select>
         </div>
 
-        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <Link
+          to="/admin/users/add"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
           <PlusIcon className="h-5 w-5" />
           <span className="hidden sm:inline md:inline">Add User</span>
-        </button>
+        </Link>
       </div>
 
       {/* Users Table */}
@@ -132,10 +181,8 @@ const UsersList = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        user.active === true
+                        user.active
                           ? "bg-green-100 text-green-800"
-                          : user.status === false
-                          ? "bg-yellow-100 text-yellow-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
@@ -143,13 +190,19 @@ const UsersList = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap flex gap-2">
-                    <button onClick={() => setSelectedUser(user)}>
+                    <Link
+                      to={`/admin/users/view/${user._id}`}
+                      onClick={() => setSelectedUser(user)}
+                    >
                       <EyeIcon className="h-5 w-5 text-blue-600" />
-                    </button>
-                    <button>
+                    </Link>
+                    <Link
+                      to={`/admin/users/edit/${user._id}`}
+                      onClick={() => setSelectedUser(user)}
+                    >
                       <PencilIcon className="h-5 w-5 text-indigo-600" />
-                    </button>
-                    <button onClick={() => handleDelete(user.id)}>
+                    </Link>
+                    <button onClick={() => handleDelete(user._id)}>
                       <TrashIcon className="h-5 w-5 text-red-600" />
                     </button>
                   </td>
@@ -165,17 +218,13 @@ const UsersList = () => {
             <div key={user._id} className="p-4">
               <div className="flex justify-between">
                 <div>
-                  <p className="font-medium">
-                    {user.firstName} {user.lastName}
-                  </p>
+                  <p className="font-medium">{user.fullName}</p>
                   <p className="text-sm text-gray-600">{user.email}</p>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
-                    user.active === true
+                    user.active
                       ? "bg-green-100 text-green-800"
-                      : user.active === false
-                      ? "bg-yellow-100 text-yellow-800"
                       : "bg-red-100 text-red-800"
                   }`}
                 >
@@ -185,13 +234,19 @@ const UsersList = () => {
               <div className="flex justify-between mt-3">
                 <span className="text-sm capitalize">{user.role}</span>
                 <div className="flex gap-3">
-                  <button onClick={() => setSelectedUser(user)}>
+                  <Link
+                    to={`/admin/users/view/${user._id}`}
+                    onClick={() => setSelectedUser(user)}
+                  >
                     <EyeIcon className="h-5 w-5 text-blue-600" />
-                  </button>
-                  <button>
+                  </Link>
+                  <Link
+                    to={`/admin/users/edit/${user._id}`}
+                    onClick={() => setSelectedUser(user)}
+                  >
                     <PencilIcon className="h-5 w-5 text-indigo-600" />
-                  </button>
-                  <button onClick={() => handleDelete(user.id)}>
+                  </Link>
+                  <button onClick={() => handleDelete(user._id)}>
                     <TrashIcon className="h-5 w-5 text-red-600" />
                   </button>
                 </div>
