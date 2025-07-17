@@ -1,7 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
 import AdminLayout from "../pages/AdminLayout";
+import StaffLayout from "../pages/StaffLayout";
 import Dashboard from "../features/admin/dashboard/Dashboard";
+import StaffDashboard from "../features/staff/dashboard/staffDashboard";
 import Patients from "../features/admin/patients/Patients";
 import Appointments from "../features/admin/appointments/Appointments";
 import Users from "../features/admin/users/Users";
@@ -24,7 +26,15 @@ import ViewAppointment from "../features/admin/appointments/ViewAppointment";
 import EditAppointment from "../features/admin/appointments/EditAppointment";
 import AddUser from "../features/admin/users/AddUser";
 import ViewUser from "../features/admin/users/ViewUser";
-import EditUser from "../features/admin/users/EditUser";
+import InvoiceList from "../features/staff/invoice/InvoiceList.jsx";
+import DocDashboard from "../features/doctor/dashboard/docDashboard";
+import DoctorLayout from "../pages/DoctorLayout";
+import PatientLayout from "../pages/PatientLayout";
+import PatientDashboard from "../features/patient/dashboard/PatientDashboard";
+import DoctorAppointmentView from "../features/doctor/appointments/DoctorAppointmentView";
+import DoctorAppointmentsList from "../features/doctor/appointments/DoctorAppointmentsList";
+import PatientAppointments from "../features/patient/appointments/PatientAppointments";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -50,21 +60,39 @@ export default function AppRoutes() {
           <Route path="appointments" element={<Appointments />} />
           <Route path="appointments/add" element={<AddAppointment />} />
           <Route path="appointments/view/:id" element={<ViewAppointment />} />
-          <Route
-            path="appointments/edit/:id"
-            element={<EditAppointment />}
-          />{" "}
+          <Route path="appointments/edit/:id" element={<EditAppointment />} />
           <Route path="users" element={<Users />} />
           <Route path="users/add" element={<AddUser />} />
           <Route path="users/view/:id" element={<ViewUser />} />
-          <Route path="users/edit/:id" element={<EditUser />} />
+          <Route path="invoice" element={<InvoiceList />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="logs" element={<Logs />} />
-          {/* <Route path="profile" element={<Profile />} /> */}
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Route>
-      {/* staff Routes */}
+      {/* Staff Routes */}
+      <Route
+        path="/staff"
+        element={<ProtectedRoute allowedRoles={["staff"]} />}
+      >
+        <Route element={<StaffLayout />}>
+          <Route path="dashboard" element={<StaffDashboard />} />
+          <Route path="patients" element={<Patients />} />
+          <Route path="patients/add" element={<AddPatientForm />} />
+          <Route path="patients/edit/:id" element={<EditPatientForm />} />
+          <Route path="patients/:id" element={<ViewPatientProfile />} />
+          <Route path="appointments" element={<Appointments />} />
+          <Route path="appointments/add" element={<AddAppointment />} />
+          <Route path="appointments/view/:id" element={<ViewAppointment />} />
+          <Route path="appointments/edit/:id" element={<EditAppointment />} />
+          <Route path="invoice" element={<InvoiceList />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      </Route>
+
+      {/* Profile Routes */}
       <Route
         path="/profile"
         element={
@@ -73,6 +101,38 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Doctor Routes */}
+      <Route
+        path="/doctor"
+        element={<ProtectedRoute allowedRoles={["doctor"]} />}
+      >
+        <Route element={<DoctorLayout />}>
+          <Route path="dashboard" element={<DocDashboard />} />
+          <Route path="patients" element={<Patients />} />
+          {/* <Route path="appointments" element={<Appointments />} /> */}
+          <Route path="appointments/view/:id" element={<ViewAppointment />} />
+          <Route path="appointments/view/:id" element={<DoctorAppointmentView />} />
+          <Route path="appointments" element={<DoctorAppointmentsList />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      </Route>
+
+      {/* Patient Routes */}
+      <Route
+        path="/patient"
+        element={<ProtectedRoute allowedRoles={["user"]} />}
+      >
+        <Route path="/patient" element={<PatientLayout />}>
+          <Route path="dashboard" element={<PatientDashboard />} />
+          <Route path="appointments" element={<PatientAppointments />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+      </Route>
+
+      {/* Catch-all route for 404 */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

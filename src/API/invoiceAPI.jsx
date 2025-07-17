@@ -3,8 +3,13 @@ import api from "../services/axios";
 const invoiceAPI = {
   // GET /invoices (admin, staff, doctor, user - filtered by role)
   getInvoices: async () => {
-    const response = await api.get("/invoices");
-    return response.data.data;
+    try {
+      const response = await api.get("/invoices");
+      return response.data.data;
+    } catch (err) {
+      console.error('Error fetching invoices:', err, err.response?.data);
+      throw err;
+    }
   },
 
   // POST /invoices (doctor only)
@@ -18,9 +23,10 @@ const invoiceAPI = {
     return response.data.data;
   },
 
-  // PATCH /invoices/:id/mark-paid (admin, staff only)
+  // PATCH /invoices/:id/pay (admin, staff only)
   markInvoiceAsPaid: async (invoiceId) => {
-    const response = await api.patch(`/invoices/${invoiceId}/mark-paid`);
+    const response = await api.patch(`/invoices/${invoiceId}/pay`);
+    console.log("response", response.data.data);
     return response.data.data;
   },
 

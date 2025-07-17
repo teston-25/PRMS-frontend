@@ -33,7 +33,7 @@ const EditPatientForm = () => {
     dispatch(updatePatient({ id, updatedData: formData })).then((result) => {
       if (result.meta.requestStatus === "fulfilled") {
         toast.success("Update successful");
-        navigate("/admin/patients");
+        navigate(-1);
       } else {
         toast.error("Update failed");
       }

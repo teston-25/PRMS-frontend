@@ -13,6 +13,23 @@ const ViewAppointment = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role || 'admin';
+
+  if (userRole === 'doctor') {
+    return (
+      <div className="max-w-4xl mx-auto p-4 text-center">
+        <div className="text-red-500 text-lg font-semibold mb-4">Not authorized to view appointment details.</div>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   const currentAppointment = useSelector((state) =>
     selectCurrentAppointment(state, id)
   );
@@ -70,15 +87,6 @@ const ViewAppointment = () => {
 
       <div className="bg-white p-6 rounded-lg shadow">
         <AppointmentForm appointment={currentAppointment} isViewMode={true} />
-
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={() => navigate(`/admin/appointments/edit/${id}`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Edit Appointment
-          </button>
-        </div>
       </div>
     </div>
   );

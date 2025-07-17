@@ -7,19 +7,26 @@ import {
   PencilSquareIcon,
   TrashIcon,
   ArrowDownTrayIcon,
+  ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
 import { PlusIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import Spinner from "../../../components/common/Spinner";
+import MedicalHistoryModal from "./MedicalHistoryModal";
+
 const Patients = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const role = user?.role || 'admin';
   const {
     list: allPatients,
     searchResults,
     loading,
   } = useSelector((state) => state.patients);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   const exportToExcel = () => {
     const dataToExport = displayedPatients.map((patient) => ({
@@ -72,9 +79,14 @@ const Patients = () => {
     <div className="p-4 sm:p-6 max-w-screen-xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Patients</h1>
+          <h1 className="text-2xl font-bold">
+            {role === 'doctor' ? 'My Patients' : 'Patients'}
+          </h1>
           <p className="text-gray-500 text-sm">
-            Manage patient information and records
+            {role === 'doctor' 
+              ? 'View patient information and medical records' 
+              : 'Manage patient information and records'
+            }
           </p>
         </div>
         {displayedPatients !== 0 ? (
@@ -89,14 +101,16 @@ const Patients = () => {
         ) : (
           ""
         )}
-        <Link
-          to="/admin/patients/add"
-          className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 min-w-[120px]"
-        >
-          <PlusIcon className="h-5 w-5" />
-          <span className="hidden sm:inline">Add Patient</span>
-          <span className="sm:hidden">Add</span>
-        </Link>
+        {role !== 'doctor' && (
+          <Link
+            to={`/${role}/patients/add`}
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 min-w-[120px]"
+          >
+            <PlusIcon className="h-5 w-5" />
+            <span className="hidden sm:inline">Add Patient</span>
+            <span className="sm:hidden">Add</span>
+          </Link>
+        )}
       </div>
 
       <div className="bg-white rounded shadow p-4">
@@ -105,7 +119,7 @@ const Patients = () => {
             type="text"
             value={searchTerm}
             onChange={handleSearch}
-            placeholder="Search patients..."
+            placeholder={role === 'doctor' ? "Search my patients..." : "Search patients..."}
             className="w-full sm:w-96 p-2 border rounded"
           />
         </div>
@@ -176,22 +190,37 @@ const Patients = () => {
                       </td>
                       <td className="flex gap-2 py-2">
                         <Link
-                          to={`/admin/patients/${p._id}`}
+                          to={`/${role}/patients/${p._id}`}
                           className="text-blue-600 hover:text-blue-800"
                         >
                           <EyeIcon className="h-5 w-5" />
                         </Link>
-                        <Link
-                          to={`/admin/patients/edit/${p._id}`}
-                          className="text-gray-600 hover:text-gray-800"
-                        >
-                          <PencilSquareIcon className="h-5 w-5" />
-                        </Link>
+                        {role !== 'doctor' && (
+                          <>
+                            <Link
+                              to={`/${role}/patients/edit/${p._id}`}
+                              className="text-gray-600 hover:text-gray-800"
+                            >
+                              <PencilSquareIcon className="h-5 w-5" />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(p._id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <TrashIcon className="h-5 w-5" />
+                            </button>
+                          </>
+                        )}
                         <button
-                          onClick={() => handleDelete(p._id)}
-                          className="text-red-500 hover:text-red-700"
+                          onClick={() => {
+                            setSelectedPatient(p);
+                            setShowHistoryModal(true);
+                          }}
+                          className="flex items-center gap-1 text-purple-600 hover:text-purple-800"
                         >
-                          <TrashIcon className="h-5 w-5" />
+                          <ClipboardDocumentListIcon className="h-5 w-5" />
+                          <span className="hidden sm:inline">Medical History</span>
+                          {/* <span className="sm:hidden">History</span> */}
                         </button>
                       </td>
                     </tr>
@@ -208,6 +237,12 @@ const Patients = () => {
           {searchTerm.trim() ? "matching search" : "total"}
         </p>
       </div>
+      {showHistoryModal && selectedPatient && (
+        <MedicalHistoryModal
+          patient={selectedPatient}
+          onClose={() => setShowHistoryModal(false)}
+        />
+      )}
     </div>
   );
 };

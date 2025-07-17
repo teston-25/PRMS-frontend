@@ -53,6 +53,7 @@ const appointmentAPI = {
   // GET /appointments/today/my (doctor, staff)
   getTodaysMyAppointments: async () => {
     const response = await api.get("/appointments/today/my");
+    console.log(response.data);
     return response.data;
   },
 
@@ -66,6 +67,13 @@ const appointmentAPI = {
   getAppointmentsByPatient: async (id) => {
     const response = await api.get(`/appointments/patient/${id}`);
     return response.data;
+  },
+
+  getAppointmentsByPatientId: async (patientId) => {
+    // Replace with your actual API call logic
+    const response = await fetch(`/appointments/patient/${patientId}`);
+    if (!response.ok) throw new Error('Failed to fetch appointments');
+    return await response.json();
   },
 };
 

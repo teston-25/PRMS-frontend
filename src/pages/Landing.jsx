@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function Landing() {
   return (
-    <div className="relative min-h-screen bg-cover bg-center bg-[url('src/assets/backg.jpg')] text-white">
+    <div className="relative min-h-screen bg-cover bg-center bg-[url('/backg.jpg')] text-white">
       {/* Overlay with blur and tint */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 

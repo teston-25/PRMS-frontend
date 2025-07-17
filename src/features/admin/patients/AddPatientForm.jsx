@@ -25,7 +25,7 @@ const AddPatientForm = () => {
 
       if (createPatient.fulfilled.match(resultAction)) {
         toast.success("Patient added successfully!");
-        navigate("/admin/patients");
+        navigate(-1);
       } else {
         throw new Error(resultAction.payload);
       }

@@ -1,7 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setSidebarOpen } from "../admin/adminSlice";
-import { logout } from "../../../features/auth/authSlice";
+import { setSidebarOpen as setAdminSidebarOpen } from "../layout/admin/adminSlice";
+import { setSidebarOpen as setStaffSidebarOpen } from "../../features/staff/staffSlice";
+import { setSidebarOpen as setPatientSidebarOpen } from "../../features/patient/dashboard/patientDashboardSlice";
+import { logout } from "../layout/admin/adminSlice";
 import toast from "react-hot-toast";
 import {
   LayoutDashboard,
@@ -21,6 +23,7 @@ const navConfig = {
       { name: "Patients", to: "/admin/patients", icon: <Users size={18} /> },
       { name: "Appointments", to: "/admin/appointments", icon: <CalendarDays size={18} /> },
       { name: "Users", to: "/admin/users", icon: <Users size={18} /> },
+      { name: "Invoices", to: "/admin/invoice", icon: <FileText size={18} /> },
       { name: "Reports", to: "/admin/reports", icon: <FileText size={18} /> },
       { name: "Settings", to: "/admin/settings", icon: <Settings size={18} /> },
       { name: "Access Logs", to: "/admin/logs", icon: <ClipboardList size={18} /> },
@@ -32,7 +35,8 @@ const navConfig = {
       { name: "Dashboard", to: "/staff/dashboard", icon: <LayoutDashboard size={18} /> },
       { name: "Patients", to: "/staff/patients", icon: <Users size={18} /> },
       { name: "Appointments", to: "/staff/appointments", icon: <CalendarDays size={18} /> },
-      { name: "Invoices", to: "/staff/invoices", icon: <FileText size={18} /> },
+      { name: "Invoices", to: "/staff/invoice", icon: <FileText size={18} /> },
+      { name: "Reports", to: "/staff/reports", icon: <FileText size={18} /> },
       { name: "Settings", to: "/staff/settings", icon: <Settings size={18} /> },
     ],
   },
@@ -41,15 +45,16 @@ const navConfig = {
     items: [
       { name: "Dashboard", to: "/doctor/dashboard", icon: <LayoutDashboard size={18} /> },
       { name: "Appointments", to: "/doctor/appointments", icon: <CalendarDays size={18} /> },
+      { name: "Reports", to: "/doctor/reports", icon: <FileText size={18} /> },
       { name: "Settings", to: "/doctor/settings", icon: <Settings size={18} /> },
     ],
   },
   user: {
     title: "PRMS Patient",
     items: [
-      { name: "Dashboard", to: "/user/dashboard", icon: <LayoutDashboard size={18} /> },
-      { name: "Appointments", to: "/user/appointments", icon: <CalendarDays size={18} /> },
-      { name: "Settings", to: "/user/settings", icon: <Settings size={18} /> },
+      { name: "Dashboard", to: "/patient/dashboard", icon: <LayoutDashboard size={18} /> },
+      { name: "Appointments", to: "/patient/appointments", icon: <CalendarDays size={18} /> },
+      { name: "Settings", to: "/patient/settings", icon: <Settings size={18} /> },
     ],
   },
 };
@@ -57,13 +62,30 @@ const navConfig = {
 export default function Sidebar({ role = "admin" }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const sidebarOpen = useSelector((state) => state.admin.sidebarOpen);
+  const sidebarOpen = useSelector((state) =>
+    role === "staff"
+      ? state.staff.sidebarOpen
+      : state.admin.sidebarOpen
+  );
   const { title, items } = navConfig[role] || navConfig.admin;
 
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logout successful!");
     navigate("/");
+  };
+
+  // Helper to close sidebar on link click for mobile
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) {
+      if (role === "staff") {
+        dispatch(setStaffSidebarOpen(false));
+      } else if (role === "user") {
+        dispatch(setPatientSidebarOpen(false));
+      } else {
+        dispatch(setAdminSidebarOpen(false));
+      }
+    }
   };
 
   return (
@@ -77,7 +99,7 @@ export default function Sidebar({ role = "admin" }) {
             key={to}
             to={to}
             end
-            onClick={() => dispatch(setSidebarOpen(false))}
+            onClick={handleLinkClick}
             className={({ isActive }) =>
               [
                 "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors",

@@ -22,6 +22,12 @@ const authAPI = {
     });
     return response.data;
   },
+
+  updatePassword: async (passwordData) => {
+    const response = await api.patch("/auth/update-password", passwordData);
+    return response.data;
+  },
 };
 
+export const { login, signup, forgotPassword, resetPassword, updatePassword } = authAPI;
 export default authAPI;

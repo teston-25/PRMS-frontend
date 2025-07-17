@@ -6,6 +6,8 @@ import {
   updateAppointment,
   fetchAppointmentById,
   clearAppointmentError,
+  fetchAppointments,
+  deleteAppointment,
 } from "./appointmentSlice";
 import toast from "react-hot-toast";
 import { selectCurrentAppointment } from "../../../components/common/selectors";
@@ -17,11 +19,15 @@ const EditAppointment = () => {
   const dispatch = useDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentAppointment = useSelector((state) =>
+  const currentAppointmentFromList = useSelector((state) =>
     selectCurrentAppointment(state, id)
   );
+  const currentAppointment = useSelector((state) => state.appointments.currentAppointment) || currentAppointmentFromList;
+  console.log(currentAppointment);
 
   const { loading, error, status } = useSelector((state) => state.appointments);
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role || 'admin';
 
   useEffect(() => {
     dispatch(clearAppointmentError());
@@ -41,7 +47,8 @@ const EditAppointment = () => {
         assignedTo: data.doctor,
         date: new Date(`${data.date}T${data.time}`).toISOString(),
         reason: data.reason,
-        status: data.status,
+        // Only allow doctors to update status
+        ...(userRole === 'doctor' && { status: data.status }),
       };
 
       // Remove undefined values
@@ -51,9 +58,12 @@ const EditAppointment = () => {
         updateAppointment({ id, updateData: cleanData })
       ).unwrap();
 
-      if (result) {
+      // Handle backend response structure
+      const updatedAppointment = result?.data?.appointment || result?.appointment || result;
+      if (updatedAppointment?._id) {
         toast.success("Appointment updated successfully!");
-        navigate("/admin/appointments");
+        dispatch(fetchAppointments());
+        navigate(-1);
       }
     } catch (error) {
       console.error("Update error:", error);
@@ -83,7 +93,7 @@ const EditAppointment = () => {
       <div className="text-center py-8">
         <div className="text-red-500 mb-4">{error}</div>
         <button
-          onClick={() => navigate("/admin/appointments")}
+          onClick={() => navigate(-1)}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Back to Appointments
@@ -98,7 +108,7 @@ const EditAppointment = () => {
       <div className="text-center py-8">
         <div className="text-gray-600 mb-4">Appointment not found</div>
         <button
-          onClick={() => navigate("/admin/appointments")}
+          onClick={() => navigate(-1)}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Back to Appointments
@@ -111,6 +121,12 @@ const EditAppointment = () => {
     <div className="p-4 max-w-4xl mx-auto bg-white rounded-lg shadow">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Edit Appointment</h2>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+        >
+          Back
+        </button>
       </div>
 
       {currentAppointment && (

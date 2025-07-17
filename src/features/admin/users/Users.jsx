@@ -8,11 +8,13 @@ import {
   EyeIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
-import { fetchUsers, deleteUser } from "./userSlice";
+import { fetchUsers, deleteUser, updateUser } from "./userSlice";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-
+import { Menu } from '@headlessui/react';
+  
 const UsersList = () => {
   const dispatch = useDispatch();
   const { users, status } = useSelector((state) => state.users);
@@ -22,6 +24,9 @@ const UsersList = () => {
   const [prevUsersLength, setPrevUsersLength] = useState(0);
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [editUserId, setEditUserId] = useState(null);
+  const [editRole, setEditRole] = useState("");
+  const [editStatus, setEditStatus] = useState("");
 
   useEffect(() => {
     if (users.length === 0 && prevUsersLength === 0) {
@@ -76,7 +81,14 @@ const UsersList = () => {
   };
 
   if (status === "loading") {
-    return <div className="flex justify-center py-8">Loading users...</div>;
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <span>Loading users...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -148,68 +160,148 @@ const UsersList = () => {
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="hidden md:block">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user._id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {user.fullName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap capitalize">
-                    {user.role}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {user.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap flex gap-2">
-                    <Link
-                      to={`/admin/users/view/${user._id}`}
-                      onClick={() => setSelectedUser(user)}
-                    >
-                      <EyeIcon className="h-5 w-5 text-blue-600" />
-                    </Link>
-                    <Link
-                      to={`/admin/users/edit/${user._id}`}
-                      onClick={() => setSelectedUser(user)}
-                    >
-                      <PencilIcon className="h-5 w-5 text-indigo-600" />
-                    </Link>
-                    <button onClick={() => handleDelete(user._id)}>
-                      <TrashIcon className="h-5 w-5 text-red-600" />
-                    </button>
-                  </td>
+          <div className="min-h-[450px] max-h-[420px] overflow-y-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredUsers.map((user) => (
+                  <tr key={user._id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.fullName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap capitalize">
+                      {editUserId === user._id ? (
+                        <select
+                          value={editRole}
+                          onChange={e => setEditRole(e.target.value)}
+                          className="border rounded px-2 py-1 bg-white"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="staff">Staff</option>
+                          <option value="doctor">Doctor</option>
+                          <option value="user">User</option>
+                        </select>
+                      ) : (
+                        user.role
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {editUserId === user._id ? (
+                        <select
+                          value={editStatus}
+                          onChange={e => setEditStatus(e.target.value)}
+                          className="border rounded px-2 py-1 bg-white"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      ) : (
+                        <span className={`px-2 py-1 rounded-full text-xs ${user.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          {user.active ? "Active" : "Inactive"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap flex gap-2">
+                      {editUserId === user._id ? (
+                        <>
+                          <button
+                            className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                            onClick={async () => {
+                              try {
+                                const result = await dispatch(updateUser({
+                                  id: user._id,
+                                  updatedData: {
+                                    role: editRole,
+                                    active: editStatus === "active"
+                                  }
+                                }));
+                                if (updateUser.fulfilled.match(result)) {
+                                  toast.success("User updated successfully!");
+                                  setEditUserId(null);
+                                } else {
+                                  toast.error(result.error?.message || "Failed to update user.");
+                                }
+                              } catch (err) {
+                                toast.error("Failed to update user.");
+                              }
+                            }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 ml-2"
+                            onClick={() => setEditUserId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300"
+                          onClick={() => {
+                            setEditUserId(user._id);
+                            setEditRole(user.role);
+                            setEditStatus(user.active ? "active" : "inactive");
+                          }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                      <Menu as="div" className="relative inline-block text-left">
+                        <Menu.Button className="flex items-center p-2 rounded-full hover:bg-gray-100">
+                          <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+                        </Menu.Button>
+                        <Menu.Items className="absolute right-full top-0 z-10 mt-0 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <div className="py-1">
+                            <Menu.Item>
+                              {({ active }) => (
+                                <Link
+                                  to={`/admin/users/view/${user._id}`}
+                                  onClick={() => setSelectedUser(user)}
+                                  className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                                >
+                                  View
+                                </Link>
+                              )}
+                            </Menu.Item>
+                            <Menu.Item>
+                              {({ active }) => (
+                                <button
+                                  onClick={() => handleDelete(user._id)}
+                                  className={`block w-full text-left px-4 py-2 text-sm text-red-600 ${active ? 'bg-gray-100' : ''}`}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </Menu.Item>
+                          </div>
+                        </Menu.Items>
+                      </Menu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Mobile List */}
@@ -231,26 +323,114 @@ const UsersList = () => {
                   {user.active ? "Active" : "Inactive"}
                 </span>
               </div>
-              <div className="flex justify-between mt-3">
+              <div className="flex justify-between mt-3 items-center">
                 <span className="text-sm capitalize">{user.role}</span>
-                <div className="flex gap-3">
-                  <Link
-                    to={`/admin/users/view/${user._id}`}
-                    onClick={() => setSelectedUser(user)}
-                  >
-                    <EyeIcon className="h-5 w-5 text-blue-600" />
-                  </Link>
-                  <Link
-                    to={`/admin/users/edit/${user._id}`}
-                    onClick={() => setSelectedUser(user)}
-                  >
-                    <PencilIcon className="h-5 w-5 text-indigo-600" />
-                  </Link>
-                  <button onClick={() => handleDelete(user._id)}>
-                    <TrashIcon className="h-5 w-5 text-red-600" />
-                  </button>
-                </div>
+                <Menu as="div" className="relative inline-block text-left">
+                  <Menu.Button className="flex items-center p-2 rounded-full hover:bg-gray-100">
+                    <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+                  </Menu.Button>
+                  <Menu.Items className="absolute right-full top-0 z-10 mt-0 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="py-1">
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link
+                            to={`/admin/users/view/${user._id}`}
+                            onClick={() => setSelectedUser(user)}
+                            className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                          >
+                            View
+                          </Link>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={() => {
+                              setEditUserId(user._id);
+                              setEditRole(user.role);
+                              setEditStatus(user.active ? "active" : "inactive");
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm text-yellow-600 ${active ? 'bg-gray-100' : ''}`}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={() => handleDelete(user._id)}
+                            className={`block w-full text-left px-4 py-2 text-sm text-red-600 ${active ? 'bg-gray-100' : ''}`}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </div>
+                  </Menu.Items>
+                </Menu>
               </div>
+              {/* Inline edit form for mobile */}
+              {editUserId === user._id && (
+                <div className="mt-3 bg-gray-50 p-3 rounded-lg border">
+                  <div className="mb-2">
+                    <label className="block text-xs font-medium mb-1">Role</label>
+                    <select
+                      value={editRole}
+                      onChange={e => setEditRole(e.target.value)}
+                      className="border rounded px-2 py-1 bg-white w-full"
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="staff">Staff</option>
+                      <option value="doctor">Doctor</option>
+                      <option value="user">User</option>
+                    </select>
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-xs font-medium mb-1">Status</label>
+                    <select
+                      value={editStatus}
+                      onChange={e => setEditStatus(e.target.value)}
+                      className="border rounded px-2 py-1 bg-white w-full"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 w-full"
+                      onClick={async () => {
+                        try {
+                          const result = await dispatch(updateUser({
+                            id: user._id,
+                            updatedData: {
+                              role: editRole,
+                              active: editStatus === "active"
+                            }
+                          }));
+                          if (updateUser.fulfilled.match(result)) {
+                            toast.success("User updated successfully!");
+                            setEditUserId(null);
+                          } else {
+                            toast.error(result.error?.message || "Failed to update user.");
+                          }
+                        } catch (err) {
+                          toast.error("Failed to update user.");
+                        }
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 w-full"
+                      onClick={() => setEditUserId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

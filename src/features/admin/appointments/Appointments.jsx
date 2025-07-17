@@ -6,43 +6,111 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  EyeIcon,
   PencilSquareIcon,
   TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
-import { fetchAppointments, fetchTodaysAppointments, fetchAppointmentsByDate } from "./appointmentSlice";
+import { fetchAppointments, fetchTodaysAppointments, fetchAppointmentsByDate, deleteAppointment } from "./appointmentSlice";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import appointmentAPI from "../../../API/appointmentAPI";
 
 const Appointments = () => {
   const dispatch = useDispatch();
   const appointmentsState = useSelector((state) => state.appointments);
+  const { user } = useSelector((state) => state.auth);
+  const role = user?.role || 'admin';
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   const appointments = appointmentsState?.appointments || [];
   const todaysAppointments = appointmentsState?.todaysAppointments || [];
   const loading = appointmentsState?.loading || false;
 
+  // Doctor-specific state
+  const [doctorAppointments, setDoctorAppointments] = useState([]);
+  const [doctorTodaysAppointments, setDoctorTodaysAppointments] = useState([]);
+  const [doctorLoading, setDoctorLoading] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const today = new Date().toISOString().split("T")[0];
+  const [selectedDate, setSelectedDate] = useState(today);
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [showAllAppointments, setShowAllAppointments] = useState(false);
 
   useEffect(() => {
-    if (appointments.length === 0 && todaysAppointments.length === 0) {
+    if (role === 'doctor') {
+      // For doctors, fetch their own appointments
+      setDoctorLoading(true);
+      appointmentAPI.getTodaysMyAppointments()
+        .then(response => {
+          console.log('Initial doctor today appointments response:', response);
+          const appointments = response?.data?.appointments || response?.appointments || response || [];
+          console.log('Setting initial doctor today appointments:', appointments);
+          setDoctorTodaysAppointments(appointments);
+          setDoctorLoading(false);
+        })
+        .catch(error => {
+          if (error?.response?.status === 404) {
+            setDoctorTodaysAppointments([]); // No appointments today
+          } else {
+            console.error('Error fetching doctor appointments:', error);
+          }
+          setDoctorLoading(false);
+        });
+    } else {
       dispatch(fetchTodaysAppointments());
     }
-  }, [dispatch, appointments.length, todaysAppointments.length]);
+  }, [dispatch, role]);
 
   // Handle date change and fetch appointments for that date
   const handleDateChange = (date) => {
     setSelectedDate(date);
     setShowAllAppointments(false);
-    if (date && date !== "All Dates") {
-      dispatch(fetchAppointmentsByDate(date));
+    if (role === 'doctor') {
+      if (date && date !== "All Dates") {
+        // For doctors, we'll fetch all their appointments and filter by date
+        setDoctorLoading(true);
+        appointmentAPI.getMyAppointments()
+          .then(response => {
+            console.log('Doctor appointments by date response:', response);
+            const allAppointments = response?.data?.appointments || response?.appointments || response || [];
+            const filteredAppointments = allAppointments.filter(appt => {
+              const apptDate = appt.date ? new Date(appt.date).toISOString().split("T")[0] : "";
+              return apptDate === date;
+            });
+            setDoctorAppointments(filteredAppointments);
+            setDoctorLoading(false);
+          })
+          .catch(error => {
+            console.error('Error fetching doctor appointments by date:', error);
+            setDoctorLoading(false);
+          });
+      } else {
+        // Fetch all doctor appointments
+        setDoctorLoading(true);
+        appointmentAPI.getMyAppointments()
+          .then(response => {
+            console.log('All doctor appointments response:', response);
+            const appointments = response?.data?.appointments || response?.appointments || response || [];
+            console.log('Setting all doctor appointments:', appointments);
+            setDoctorAppointments(appointments);
+            setDoctorLoading(false);
+          })
+          .catch(error => {
+            console.error('Error fetching all doctor appointments:', error);
+            setDoctorLoading(false);
+          });
+      }
     } else {
-      dispatch(fetchAppointments());
+      if (date && date !== "All Dates") {
+        dispatch(fetchAppointmentsByDate(date));
+      } else {
+        dispatch(fetchAppointments());
+      }
     }
   };
 
@@ -50,18 +118,63 @@ const Appointments = () => {
   const handleShowAllAppointments = () => {
     setShowAllAppointments(true);
     setSelectedDate("All Dates");
-    dispatch(fetchAppointments());
+    if (role === 'doctor') {
+      setDoctorLoading(true);
+      appointmentAPI.getMyAppointments()
+        .then(response => {
+          console.log('All doctor appointments button response:', response);
+          const appointments = response?.data?.appointments || response?.appointments || response || [];
+          console.log('Setting all doctor appointments from button:', appointments);
+          setDoctorAppointments(appointments);
+          setDoctorLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching all doctor appointments:', error);
+          setDoctorLoading(false);
+        });
+    } else {
+      dispatch(fetchAppointments());
+    }
   };
 
   // Handle "Today's Appointments" button click
   const handleShowTodaysAppointments = () => {
     setShowAllAppointments(false);
-    setSelectedDate(new Date().toISOString().split("T")[0]);
-    dispatch(fetchTodaysAppointments());
+    setSelectedDate(today);
+    if (role === 'doctor') {
+      setDoctorLoading(true);
+      appointmentAPI.getTodaysMyAppointments()
+        .then(response => {
+          console.log('Today\'s doctor appointments response:', response);
+          const appointments = response?.data?.appointments || response?.appointments || response || [];
+          console.log('Setting today\'s doctor appointments:', appointments);
+          setDoctorTodaysAppointments(appointments);
+          setDoctorLoading(false);
+        })
+        .catch(error => {
+          if (error?.response?.status === 404) {
+            setDoctorTodaysAppointments([]); // No appointments today
+          } else {
+            console.error('Error fetching today\'s doctor appointments:', error);
+          }
+          setDoctorLoading(false);
+        });
+    } else {
+      dispatch(fetchTodaysAppointments());
+    }
   };
 
+  const isTodayMode = !showAllAppointments && selectedDate === today;
+  const sourceAppointments = role === 'doctor' 
+    ? (isTodayMode ? (doctorTodaysAppointments || []) : (doctorAppointments || []))
+    : (isTodayMode ? (todaysAppointments || []) : (appointments || []));
+
   const filteredAppointments = useMemo(() => {
-    return appointments.filter((appointment) => {
+    if (!Array.isArray(sourceAppointments)) {
+      console.warn('sourceAppointments is not an array:', sourceAppointments);
+      return [];
+    }
+    return sourceAppointments.filter((appointment) => {
       const patientName = `${appointment?.patient?.firstName || ""} ${
         appointment?.patient?.lastName || ""
       }`.toLowerCase();
@@ -103,7 +216,7 @@ const Appointments = () => {
 
       return matchesSearch && matchesDate && matchesStatus;
     });
-  }, [appointments, searchTerm, selectedDate, statusFilter]);
+  }, [sourceAppointments, searchTerm, selectedDate, statusFilter]);
 
   const statusCounts = useMemo(
     () => ({
@@ -125,12 +238,71 @@ const Appointments = () => {
   );
 
   const handleDelete = (appointmentId) => {
-    // Add your delete logic here
-    console.log("Delete appointment:", appointmentId);
-    // dispatch(deleteAppointment(appointmentId));
+    if (window.confirm("Are you sure you want to delete this appointment?")) {
+      dispatch(deleteAppointment(appointmentId)).then(() => {
+        dispatch(fetchAppointments());
+        toast.success("Appointment deleted successfully");
+      });
+    }
   };
 
-  if (loading) {
+  const handleStatusUpdate = async (appointmentId, newStatus) => {
+    if (updatingStatus) return; // Prevent multiple clicks
+    try {
+      setUpdatingStatus(true);
+      console.log('Updating appointment status:', { appointmentId, newStatus });
+      const response = await appointmentAPI.updateAppointmentStatus(appointmentId, newStatus);
+      console.log('Status update response:', response);
+      toast.success(`Appointment status updated to ${newStatus}`);
+      // Refresh the appointments data
+      if (role === 'doctor') {
+        if (showAllAppointments) {
+          setDoctorLoading(true);
+          appointmentAPI.getMyAppointments()
+            .then(response => {
+              const appointments = response?.data?.appointments || response?.appointments || response || [];
+              setDoctorAppointments(appointments);
+              setDoctorLoading(false);
+            })
+            .catch(error => {
+              console.error('Error refreshing doctor appointments:', error);
+              setDoctorLoading(false);
+            });
+        } else {
+          setDoctorLoading(true);
+          appointmentAPI.getTodaysMyAppointments()
+            .then(response => {
+              const appointments = response?.data?.appointments || response?.appointments || response || [];
+              setDoctorTodaysAppointments(appointments);
+              setDoctorLoading(false);
+            })
+            .catch(error => {
+              if (error?.response?.status === 404) {
+                setDoctorTodaysAppointments([]); // No appointments today
+              } else {
+                console.error('Error refreshing today\'s doctor appointments:', error);
+              }
+              setDoctorLoading(false);
+            });
+        }
+      } else {
+        if (showAllAppointments) {
+          dispatch(fetchAppointments());
+        } else {
+          dispatch(fetchTodaysAppointments());
+        }
+      }
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      toast.error(`Failed to update appointment status: ${error.message || 'Unknown error'}`);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const isLoading = role === 'doctor' ? doctorLoading : loading;
+  
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="flex items-center space-x-2">
@@ -146,10 +318,13 @@ const Appointments = () => {
       {/* Header */}
       <div className="mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Appointments
+          {role === 'doctor' ? 'My Appointments' : 'Appointments'}
         </h1>
         <p className="text-gray-600 mt-1 text-sm sm:text-base">
-          Manage patient appointments and scheduling
+          {role === 'doctor' 
+            ? 'View and manage your patient appointments' 
+            : 'Manage patient appointments and scheduling'
+          }
         </p>
       </div>
 
@@ -173,7 +348,7 @@ const Appointments = () => {
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by patient or doctor name..."
+            placeholder={role === 'doctor' ? "Search by patient name..." : "Search by patient or doctor name..."}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -214,25 +389,27 @@ const Appointments = () => {
                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
             }`}
           >
-            All Appointments
+            {role === 'doctor' ? 'All My Appointments' : 'All Appointments'}
           </button>
           <button
             onClick={handleShowTodaysAppointments}
             className={`px-4 py-2 rounded-lg border transition-colors ${
-              !showAllAppointments && selectedDate === new Date().toISOString().split("T")[0]
+              !showAllAppointments && selectedDate === today
                 ? "bg-green-600 text-white border-green-600"
                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
             }`}
           >
             Today
           </button>
-          <Link
-            to="/admin/appointments/add"
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Add Appointment
-          </Link>
+          {role !== 'doctor' && (
+            <Link
+              to={`/${role}/appointments/add`}
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Add Appointment
+            </Link>
+          )}
         </div>
       </div>
 
@@ -243,7 +420,7 @@ const Appointments = () => {
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by patient or doctor name..."
+            placeholder={role === 'doctor' ? "Search by patient name..." : "Search by patient or doctor name..."}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -295,26 +472,28 @@ const Appointments = () => {
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
               >
-                All Appointments
+                {role === 'doctor' ? 'All My Appointments' : 'All Appointments'}
               </button>
               <button
                 onClick={handleShowTodaysAppointments}
-                className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
-                  !showAllAppointments && selectedDate === new Date().toISOString().split("T")[0]
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
+                            className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+              !showAllAppointments && selectedDate === today
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
               >
                 Today
               </button>
             </div>
-            <Link
-              to="/admin/appointments/add"
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span>Add Appointment</span>
-            </Link>
+            {role !== 'doctor' && (
+              <Link
+                to={`/${role}/appointments/add`}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                <PlusIcon className="h-5 w-5" />
+                <span>Add Appointment</span>
+              </Link>
+            )}
           </div>
         )}
       </div>
@@ -324,9 +503,9 @@ const Appointments = () => {
         <div className="p-3 sm:p-4 border-b">
           <h3 className="text-base sm:text-lg font-semibold">
             {showAllAppointments 
-              ? "All Appointments"
-              : selectedDate === new Date().toISOString().split("T")[0]
-              ? "Today's Appointments"
+              ? (role === 'doctor' ? "All My Appointments" : "All Appointments")
+              : selectedDate === today
+              ? (role === 'doctor' ? "Today's My Appointments" : "Today's Appointments")
               : `Appointments for ${new Date(selectedDate).toLocaleDateString("en-US", {
                   weekday: "long",
                   month: "long",
@@ -341,16 +520,18 @@ const Appointments = () => {
           <>
             {/* Desktop Table */}
             <div className="hidden sm:block">
-              <div className="max-h-[35vh] overflow-y-auto">
+              <div className="max-h-[40vh] min-h-[320px] px-4 overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
                       <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Patient
                       </th>
-                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Doctor
-                      </th>
+                      {role !== 'doctor' && (
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Doctor
+                        </th>
+                      )}
                       <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date & Time
                       </th>
@@ -366,18 +547,41 @@ const Appointments = () => {
                     {filteredAppointments.map((appointment) => (
                       <tr key={appointment?._id}>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          {appointment?.patient?.firstName || "N/A"}{" "}
-                          {appointment?.patient?.lastName || ""}
+                          <div>
+                            <div className="font-medium">
+                              {appointment?.patient?.firstName || "N/A"}{" "}
+                              {appointment?.patient?.lastName || ""}
+                            </div>
+                            {role === 'doctor' && (
+                              <div className="text-sm text-gray-500">
+                                {appointment?.patient?.email || "N/A"}
+                              </div>
+                            )}
+                          </div>
                         </td>
+                        {role !== 'doctor' && (
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            {appointment?.assignedTo?.fullName
+                              ? `Dr. ${appointment.assignedTo.fullName}`
+                              : "N/A"}
+                          </td>
+                        )}
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          {appointment?.assignedTo?.fullName
-                            ? `Dr. ${appointment.assignedTo.fullName}`
-                            : "N/A"}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          {appointment?.date
-                            ? new Date(appointment.date).toLocaleString()
-                            : "N/A"}
+                          <div>
+                            <div className="text-sm font-medium">
+                              {appointment?.date
+                                ? new Date(appointment.date).toLocaleDateString()
+                                : "N/A"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {appointment?.date
+                                ? new Date(appointment.date).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })
+                                : "N/A"}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span
@@ -395,27 +599,63 @@ const Appointments = () => {
                           </span>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap flex gap-2">
-                          <Link
-                            to={`/admin/appointments/view/${appointment._id}`}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="View"
-                          >
-                            <EyeIcon className="h-5 w-5" />
-                          </Link>
-                          <Link
-                            to={`/admin/appointments/edit/${appointment._id}`}
-                            className="text-gray-600 hover:text-gray-800"
-                            title="Edit"
-                          >
-                            <PencilSquareIcon className="h-5 w-5" />
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(appointment._id)}
-                            className="text-red-600 hover:text-red-900"
-                            title="Delete"
-                          >
-                            <TrashIcon className="h-5 w-5" />
-                          </button>
+                          {role !== 'doctor' && (
+                            <Link
+                              to={`/${role}/appointments/view/${appointment._id}`}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View"
+                            >
+                              <EyeIcon className="h-5 w-5" />
+                            </Link>
+                          )}
+                          {role !== 'doctor' && (
+                            <>
+                              <Link
+                                to={`/${role}/appointments/edit/${appointment._id}`}
+                                className="text-gray-600 hover:text-gray-800"
+                                title="Edit"
+                              >
+                                <PencilSquareIcon className="h-5 w-5" />
+                              </Link>
+                              <button
+                                onClick={() => handleDelete(appointment._id)}
+                                className="text-red-600 hover:text-red-900"
+                                title="Delete"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </button>
+                            </>
+                          )}
+                          {role === 'doctor' && appointment?.status === "pending" && (
+                            <button
+                              onClick={() => handleStatusUpdate(appointment._id, "confirmed")}
+                              disabled={updatingStatus}
+                              className={`text-green-600 hover:text-green-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              title="Start Appointment"
+                            >
+                              <CheckCircleIcon className="h-5 w-5" />
+                            </button>
+                          )}
+                          {role === 'doctor' && appointment?.status === "confirmed" && (
+                            <button
+                              onClick={() => handleStatusUpdate(appointment._id, "completed")}
+                              disabled={updatingStatus}
+                              className={`text-green-600 hover:text-green-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              title="Complete Appointment"
+                            >
+                              <CheckCircleIcon className="h-5 w-5" />
+                            </button>
+                          )}
+                          {role === 'doctor' && (appointment?.status === "pending" || appointment?.status === "confirmed") && (
+                            <button
+                              onClick={() => handleStatusUpdate(appointment._id, "cancelled")}
+                              disabled={updatingStatus}
+                              className={`text-red-600 hover:text-red-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              title="Cancel Appointment"
+                            >
+                              <XCircleIcon className="h-5 w-5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -434,9 +674,15 @@ const Appointments = () => {
                         {appointment?.patient?.firstName || "N/A"}{" "}
                         {appointment?.patient?.lastName || ""}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Dr. {appointment?.assignedTo?.fullName || "N/A"}
-                      </p>
+                      {role === 'doctor' ? (
+                        <p className="text-sm text-gray-600">
+                          {appointment?.patient?.email || "N/A"}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          Dr. {appointment?.assignedTo?.fullName || "N/A"}
+                        </p>
+                      )}
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
@@ -453,32 +699,80 @@ const Appointments = () => {
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-500">
-                    {appointment?.date
-                      ? new Date(appointment.date).toLocaleString()
-                      : "N/A"}
+                    <div className="flex items-center">
+                      <CalendarIcon className="h-4 w-4 mr-1" />
+                      {appointment?.date
+                        ? new Date(appointment.date).toLocaleDateString()
+                        : "N/A"}
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <ClockIcon className="h-4 w-4 mr-1" />
+                      {appointment?.date
+                        ? new Date(appointment.date).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : "N/A"}
+                    </div>
                   </div>
                   <div className="mt-2 flex justify-end gap-3">
-                    <Link
-                      to={`/admin/appointments/view/${appointment._id}`}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="View"
-                    >
-                      <EyeIcon className="h-5 w-5" />
-                    </Link>
-                    <Link
-                      to={`/admin/appointments/edit/${appointment._id}`}
-                      className="text-yellow-600 hover:text-yellow-900"
-                      title="Edit"
-                    >
-                      <PencilSquareIcon className="h-5 w-5" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(appointment._id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                    {role !== 'doctor' && (
+                      <Link
+                        to={`/${role}/appointments/view/${appointment._id}`}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="View"
+                      >
+                        <EyeIcon className="h-5 w-5" />
+                      </Link>
+                    )}
+                    {role !== 'doctor' && (
+                      <>
+                        <Link
+                          to={`/${role}/appointments/edit/${appointment._id}`}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Edit"
+                        >
+                          <PencilSquareIcon className="h-5 w-5" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(appointment._id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
+                    {role === 'doctor' && appointment?.status === "pending" && (
+                      <button
+                        onClick={() => handleStatusUpdate(appointment._id, "confirmed")}
+                        disabled={updatingStatus}
+                        className={`text-green-600 hover:text-green-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title="Start Appointment"
+                      >
+                        <CheckCircleIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                    {role === 'doctor' && appointment?.status === "confirmed" && (
+                      <button
+                        onClick={() => handleStatusUpdate(appointment._id, "completed")}
+                        disabled={updatingStatus}
+                        className={`text-green-600 hover:text-green-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title="Complete Appointment"
+                      >
+                        <CheckCircleIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                    {role === 'doctor' && (appointment?.status === "pending" || appointment?.status === "confirmed") && (
+                      <button
+                        onClick={() => handleStatusUpdate(appointment._id, "cancelled")}
+                        disabled={updatingStatus}
+                        className={`text-red-600 hover:text-red-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title="Cancel Appointment"
+                      >
+                        <XCircleIcon className="h-5 w-5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -487,7 +781,12 @@ const Appointments = () => {
         ) : (
           <div className="p-6 sm:p-8 text-center">
             <p className="text-gray-500">
-              No appointments found for the selected criteria.
+              {isTodayMode
+                ? (role === 'doctor'
+                    ? "No appointments scheduled for you today."
+                    : "No appointments scheduled for today.")
+                : "No appointments found for the selected criteria."
+              }
             </p>
           </div>
         )}

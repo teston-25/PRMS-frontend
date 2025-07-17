@@ -20,9 +20,17 @@ export const addAppointment = createAsyncThunk(
 
 export const fetchTodaysAppointments = createAsyncThunk(
   "appointments/fetchTodaysAppointments",
-  async () => {
-    const response = await appointmentsAPI.getTodaysAppointments();
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await appointmentsAPI.getTodaysAppointments();
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        // Return empty appointments array if not found
+        return { appointments: [] };
+      }
+      return rejectWithValue(error.message || 'Failed to fetch today\'s appointments');
+    }
   }
 );
 
@@ -125,8 +133,13 @@ const appointmentsSlice = createSlice({
       .addCase(addAppointment.pending, handlePending)
       .addCase(addAppointment.fulfilled, (state, action) => {
         state.loading = false;
-        state.appointments.push(action.payload);
-        state.status = "succeeded";
+        const newAppointment = action.payload.appointment || action.payload;
+        if (newAppointment?._id) {
+          state.appointments.push(newAppointment);
+          state.status = "succeeded";
+        } else {
+          throw new Error("No ID returned from server");
+        }
       })
       .addCase(addAppointment.rejected, handleRejected)
 
@@ -166,9 +179,18 @@ const appointmentsSlice = createSlice({
       .addCase(deleteAppointment.pending, handlePending)
       .addCase(deleteAppointment.fulfilled, (state, action) => {
         state.loading = false;
-        state.appointments = state.appointments.filter(
-          (appt) => appt._id !== action.payload._id
-        );
+        // Safely extract the deleted appointment ID
+        const deletedId =
+          action.payload?._id ||
+          action.payload?.appointment?._id ||
+          action.payload?.data?.appointment?._id;
+        if (deletedId) {
+          state.appointments = state.appointments.filter(
+            (appt) => appt._id !== deletedId
+          );
+        } else {
+          console.log('No ID returned from server');
+        }
         state.status = "succeeded";
       })
       .addCase(deleteAppointment.rejected, handleRejected)

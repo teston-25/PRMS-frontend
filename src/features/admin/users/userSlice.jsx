@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import userAPI from "../../../API/userAPI";
-import { signup } from "../../auth/authSlice";
+import authAPI from "../../../API/authAPI";
 
 export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
   const response = await userAPI.getAllUsers();
@@ -19,26 +19,14 @@ export const fetchUserById = createAsyncThunk(
   }
 );
 
-export const updateUserRole = createAsyncThunk(
-  "users/updateRole",
-  async ({ id, role }, { rejectWithValue }) => {
+export const updateUser = createAsyncThunk(
+  "users/updateUser",
+  async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const response = await userAPI.updateUserRole(id, role);
+      const response = await userAPI.updateUserRole(id, updatedData);
       return response;
     } catch (err) {
-      return rejectWithValue(err.response.data);
-    }
-  }
-);
-
-export const updateUserStatus = createAsyncThunk(
-  "users/updateStatus",
-  async ({ id, status }, { rejectWithValue }) => {
-    try {
-      const response = await userAPI.updateUserStatus(id, status);
-      return response;
-    } catch (err) {
-      return rejectWithValue(err.response.data);
+      return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
@@ -58,8 +46,9 @@ export const deleteUser = createAsyncThunk(
 export const addNewUser = createAsyncThunk(
   "users/addNewUser",
   async (userData) => {
-    const response = await signup.post("/users", userData);
-    return response.data;
+    const response = await authAPI.signup(userData);
+    console.log("response addNewUser:", response);
+    return response;
   }
 );
 
@@ -98,18 +87,12 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message;
       })
-      .addCase(updateUserRole.fulfilled, (state, action) => {
-        const { id, role } = action.payload;
-        const existingUser = state.users.find((user) => user.id === id);
+      .addCase(updateUser.fulfilled, (state, action) => {
+        const updated = action.payload.user || action.payload;
+        const existingUser = state.users.find((user) => user._id === updated._id);
         if (existingUser) {
-          existingUser.role = role;
-        }
-      })
-      .addCase(updateUserStatus.fulfilled, (state, action) => {
-        const { id, status } = action.payload;
-        const existingUser = state.users.find((user) => user.id === id);
-        if (existingUser) {
-          existingUser.status = status;
+          existingUser.role = updated.role;
+          existingUser.active = updated.active;
         }
       })
       .addCase(deleteUser.fulfilled, (state, action) => {

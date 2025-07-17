@@ -37,6 +37,9 @@ function Reports() {
   const { summary, appointments, diagnoses, loading, error } = reportsState || {};
   const [dateRange, setDateRange] = useState(getMonthRange());
 
+  // Get current user role
+  const userRole = useSelector((state) => state.auth.user?.role || "");
+
   useEffect(() => {
     dispatch(fetchSummaryReport());
     dispatch(fetchFrequentDiagnoses());
@@ -54,38 +57,69 @@ function Reports() {
 
   // Prepare chart data
   const chartData = {
-    labels: diagnoses?.map((d) => d.diagnosis) || [],
+    labels: diagnoses?.map((d) => d.diagnosis || d._id) || [],
     datasets: [
       {
         label: "Frequency",
         data: diagnoses?.map((d) => d.count) || [],
         backgroundColor: "#6366f1",
+        borderRadius: 8,
+        barThickness: 24,
       },
     ],
   };
 
+  // Chart options for horizontal, no animation
+  const chartOptions = {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      tooltip: { enabled: true },
+    },
+    animation: false,
+    scales: {
+      x: {
+        beginAtZero: true,
+        grid: { display: false },
+        ticks: { color: '#64748b', font: { size: 13 } },
+      },
+      y: {
+        grid: { display: false },
+        ticks: { color: '#334155', font: { size: 13 } },
+      },
+    },
+    maintainAspectRatio: false,
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-screen-xl mx-auto">
-      <h2 className="text-3xl font-semibold text-gray-800 mb-6">Reports Dashboard</h2>
+      <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+        Reports Dashboard
+        {userRole && (
+          <span className="ml-2 text-base text-blue-500 font-normal">({userRole.charAt(0).toUpperCase() + userRole.slice(1)})</span>
+        )}
+      </h2>
       {loading && <Spinner />}
       {error && <ErrorMessage message={error} />}
       {!loading && !error && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-center justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-center justify-between min-w-0">
               <div>
                 <p className="text-sm font-medium text-gray-600 flex items-center gap-2"><CalendarIcon className="w-5 h-5 text-blue-500" />Total Appointments</p>
                 <p className="text-2xl font-bold text-gray-900">{summary?.totalAppointments ?? '-'}</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-center justify-between">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-center justify-between min-w-0">
               <div>
                 <p className="text-sm font-medium text-gray-600 flex items-center gap-2"><UserGroupIcon className="w-5 h-5 text-green-500" />Total Patients</p>
                 <p className="text-2xl font-bold text-gray-900">{summary?.totalPatients ?? '-'}</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-center justify-between">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 flex items-center justify-between min-w-0">
               <div>
                 <p className="text-sm font-medium text-gray-600 flex items-center gap-2"><ClipboardDocumentListIcon className="w-5 h-5 text-purple-500" />Diagnoses</p>
                 <p className="text-2xl font-bold text-gray-900">{diagnoses?.length ?? '-'}</p>
@@ -153,7 +187,11 @@ function Reports() {
                         {appointments.map((appt, idx) => (
                           <tr key={idx} className="hover:bg-gray-50">
                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap">{new Date(appt.date).toLocaleDateString()}</td>
-                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">{appt.patient?.fullName || appt.patient?.firstName + ' ' + appt.patient?.lastName || appt.patient?.email || '-'}</td>
+                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">{
+  appt.patient
+    ? (appt.patient.fullName || ((appt.patient.firstName || 'N/A') + ' ' + (appt.patient.lastName || '')) || appt.patient.email || 'N/A')
+    : 'N/A'
+}</td>
                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap">{appt.doctor?.fullName || '-'}</td>
                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap truncate max-w-[120px]">{appt.reason || '-'}</td>
                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -181,7 +219,11 @@ function Reports() {
                     <div key={idx} className="p-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">{appt.patient?.fullName || appt.patient?.firstName + ' ' + appt.patient?.lastName || appt.patient?.email || '-'}</p>
+                          <p className="font-medium">{
+  appt.patient
+    ? (appt.patient.fullName || ((appt.patient.firstName || 'N/A') + ' ' + (appt.patient.lastName || '')) || appt.patient.email || 'N/A')
+    : 'N/A'
+}</p>
                           <p className="text-sm text-gray-600">{appt.doctor?.fullName || '-'}</p>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -210,17 +252,12 @@ function Reports() {
           </div>
 
           {/* Frequent Diagnosis List */}
-          <div className="bg-white rounded-2xl shadow p-6 border border-gray-200 max-w-md mx-auto">
+          <div className="bg-white rounded-2xl shadow p-6 border border-gray-200 max-w-2xl mx-auto">
             <h3 className="text-lg font-semibold mb-4 text-gray-700">Frequent Diagnoses</h3>
             {diagnoses && diagnoses.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
-                {diagnoses.map((d) => (
-                  <li key={d._id} className="flex justify-between items-center py-2">
-                    <span className="font-medium text-gray-800">{d._id}</span>
-                    <span className="bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs font-semibold">{d.count}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="w-full min-h-[200px] h-[40vw] max-h-[350px] md:h-[320px]">
+                <Bar data={chartData} options={chartOptions} />
+              </div>
             ) : (
               <div className="text-gray-400">No diagnosis data available.</div>
             )}

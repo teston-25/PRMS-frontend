@@ -42,7 +42,18 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       toast.success(data.message || "Login successful!");
 
-      navigate(data.user.role === "admin" ? "/admin/dashboard" : "/profile");
+      // Redirect based on user role
+      if (data.user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (data.user.role === "staff") {
+        navigate("/staff/dashboard");
+      } else if (data.user.role === "doctor") {
+        navigate("/doctor/dashboard");
+      } else if (data.user.role === "user") {
+        navigate("/patient/dashboard");
+      } else {
+        navigate("/profile"); // fallback
+      }
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
       dispatch(setError(errorMessage));

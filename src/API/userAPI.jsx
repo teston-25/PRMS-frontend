@@ -12,15 +12,10 @@ const userAPI = {
     return response.data;
   },
 
-  // PATCH /users/:id/role (admin)
-  updateUserRole: async (id, role) => {
-    const response = await api.patch(`/users/${id}/role`, { role });
-    return response.data;
-  },
-
-  // PATCH /users/:id/status (admin, staff)
-  updateUserStatus: async (id, status) => {
-    const response = await api.patch(`/users/${id}/status`, { status });
+  // PATCH /users/:id (admin)
+  updateUserRole: async (id, updatedData) => {
+    const response = await api.patch(`/users/${id}`, updatedData);
+    console.log("response updateUser:", response);
     return response.data;
   },
 

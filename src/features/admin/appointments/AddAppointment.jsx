@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import AppointmentForm from "./AppointmentForm";
-import { addAppointment } from "./appointmentSlice";
+import { addAppointment, fetchAppointments } from "./appointmentSlice";
 import toast from "react-hot-toast";
 
 const AddAppointment = () => {
@@ -13,31 +13,30 @@ const AddAppointment = () => {
   const handleSubmit = async (data) => {
     try {
       setLoading(true);
-
       const appointmentData = {
         patient: {
-          ...(data.patient.email && { email: data.patient.email }),
-          ...(data.patient.phone && { phone: data.patient.phone }),
+          email: data.patient.email || "",
+          ...(data.patient.phone && { phone: Number(data.patient.phone) })
         },
-        assignedTo: data.doctor,
         date: new Date(`${data.date}T${data.time}:00`).toISOString(),
+        assignedTo: data.doctor,
         reason: data.reason,
-        status: data.status,
+        status: data.status
       };
-
-      console.log("Submitting appointment:", appointmentData);
-
       const result = await dispatch(addAppointment(appointmentData)).unwrap();
-
-      if (result?.appointment?._id) {
+      // Handle backend response structure
+      const newAppointment = result?.data?.appointment || result?.appointment || result;
+      if (newAppointment?._id) {
         toast.success("Appointment booked successfully!");
-        navigate("/admin/appointments");
+        // Refetch appointments to get full patient info
+        dispatch(fetchAppointments());
+        navigate(-1);
       } else {
         throw new Error("No ID returned from server");
       }
     } catch (error) {
       console.error("Booking error:", error);
-      toast.error(error.message || "Failed to book appointment");
+      toast.error("Failed to book appointment");
     } finally {
       setLoading(false);
     }
@@ -50,11 +49,11 @@ const AddAppointment = () => {
           Create New Appointment
         </h2>
       </div>
-
       <AppointmentForm
         onSubmit={handleSubmit}
         loading={loading}
         fetchDoctorsOnMount={true}
+        isAddMode={true}
       />
     </div>
   );

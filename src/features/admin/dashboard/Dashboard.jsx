@@ -65,7 +65,7 @@ export default function Dashboard() {
       </h2>
 
       {loading ? (
-        <Spinner />
+        <div className="py-8"><Spinner /></div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
