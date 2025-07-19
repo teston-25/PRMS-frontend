@@ -59,7 +59,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div>
+    <div className="p-6 m-4">
       <h2 className="text-3xl font-semibold text-gray-800 mb-6">
         Dashboard Overview
       </h2>

@@ -9,8 +9,12 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "https://prms-backend-rrdo.onrender.com/",
-      // "/api": "http://localhost:5000",
+      "/api": {
+        target: "https://prms-backend-rrdo.onrender.com/",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
     },
   },
 });

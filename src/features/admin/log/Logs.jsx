@@ -12,7 +12,6 @@ function Logs() {
   useEffect(() => {
     dispatch(fetchAuditLogs());
   }, [dispatch]);
-  console.log("logs",logs);
   return (
     <div className="p-2 sm:p-4 md:p-6 max-w-screen-lg mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
@@ -29,7 +28,7 @@ function Logs() {
       {error && <ErrorMessage message={error} />}
       {/* Desktop Table */}
       <div className="hidden sm:block bg-white rounded-2xl shadow p-4 border border-gray-100 overflow-x-auto">
-        <div className="max-h-[480px] overflow-y-auto">
+        <div className="max-h-[600px] overflow-y-auto">
           <table className="min-w-[600px] w-full text-sm divide-y divide-gray-200" aria-label="Audit log table">
             <thead className="bg-gray-50">
               <tr>
@@ -62,7 +61,7 @@ function Logs() {
       </div>
       {/* Mobile Cards */}
       <div className="sm:hidden">
-        <div className="max-h-[400px] overflow-y-auto space-y-4 pr-1">
+        <div className="max-h-[520px] overflow-y-auto space-y-4 pr-1">
           {logs && logs.length > 0 ? (
             logs.map((log) => (
               <div key={log._id} className="bg-white rounded-xl shadow p-4 border border-gray-100 flex flex-col gap-2">

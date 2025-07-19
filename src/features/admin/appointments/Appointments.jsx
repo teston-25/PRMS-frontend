@@ -12,6 +12,7 @@ import {
   XCircleIcon,
   ClockIcon,
   EyeIcon,
+  FunnelIcon,
 } from "@heroicons/react/24/outline";
 import { fetchAppointments, fetchTodaysAppointments, fetchAppointmentsByDate, deleteAppointment } from "./appointmentSlice";
 import { Link } from "react-router-dom";
@@ -23,7 +24,7 @@ const Appointments = () => {
   const appointmentsState = useSelector((state) => state.appointments);
   const { user } = useSelector((state) => state.auth);
   const role = user?.role || 'admin';
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const appointments = appointmentsState?.appointments || [];
   const todaysAppointments = appointmentsState?.todaysAppointments || [];
@@ -329,61 +330,70 @@ const Appointments = () => {
       </div>
 
       {/* Status Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
         {Object.entries(statusCounts).map(([status, count]) => (
           <div
             key={status}
-            className="bg-white p-3 sm:p-4 rounded-lg shadow text-center"
+            className="bg-white p-3 sm:p-4 rounded-lg shadow text-center min-w-[100px]"
           >
-            <p className="text-xl sm:text-2xl font-bold">{count}</p>
-            <p className="text-xs sm:text-sm text-gray-500">{status}</p>
+            <p className="text-lg xs:text-xl sm:text-2xl font-bold">{count}</p>
+            <p className="text-xs xs:text-sm sm:text-sm text-gray-500">{status}</p>
           </div>
         ))}
       </div>
 
-      {/* Search and Filters - Desktop */}
-      <div className="hidden sm:flex gap-3 mb-4 sm:mb-6">
+      {/* Desktop-style Filter Bar for all devices */}
+      <div className="mb-4 sm:mb-6 bg-gray-50 border border-gray-200 rounded-xl p-3 flex flex-col md:flex-row md:items-end md:gap-3 gap-3 w-full">
         {/* Search */}
         <div className="relative flex-1">
+          <label htmlFor="desktop-search" className="text-xs font-semibold text-gray-600 mb-1 block">Search</label>
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
+            id="desktop-search"
             type="text"
+            aria-label="Search appointments"
             placeholder={role === 'doctor' ? "Search by patient name..." : "Search by patient or doctor name..."}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
         {/* Date Picker */}
         <div className="relative w-48">
+          <label htmlFor="desktop-date" className="text-xs font-semibold text-gray-600 mb-1 block">Date</label>
           <CalendarIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
+            id="desktop-date"
             type="date"
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            aria-label="Filter by date"
+            className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
             value={selectedDate}
             onChange={(e) => handleDateChange(e.target.value)}
           />
         </div>
-
         {/* Status Filter */}
-        <select
-          className="w-48 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="All Status">All Status</option>
-          <option value="pending">Scheduled</option>
-          <option value="confirmed">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-
+        <div className="w-48">
+          <label htmlFor="desktop-status" className="text-xs font-semibold text-gray-600 mb-1 block">Status</label>
+          <select
+            id="desktop-status"
+            aria-label="Filter by status"
+            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="All Status">All Status</option>
+            <option value="pending">Scheduled</option>
+            <option value="confirmed">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
         {/* Action Buttons */}
         <div className="flex gap-2">
           <button
             onClick={handleShowAllAppointments}
-            className={`px-4 py-2 rounded-lg border transition-colors ${
+            aria-label={role === 'doctor' ? 'Show all my appointments' : 'Show all appointments'}
+            className={`px-4 py-3 rounded-lg border text-base font-semibold transition-colors ${
               showAllAppointments
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -393,7 +403,8 @@ const Appointments = () => {
           </button>
           <button
             onClick={handleShowTodaysAppointments}
-            className={`px-4 py-2 rounded-lg border transition-colors ${
+            aria-label="Show today's appointments"
+            className={`px-4 py-3 rounded-lg border text-base font-semibold transition-colors ${
               !showAllAppointments && selectedDate === today
                 ? "bg-green-600 text-white border-green-600"
                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -404,98 +415,14 @@ const Appointments = () => {
           {role !== 'doctor' && (
             <Link
               to={`/${role}/appointments/add`}
-              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 whitespace-nowrap"
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 text-base font-semibold"
+              aria-label="Add appointment"
             >
               <PlusIcon className="h-5 w-5" />
-              Add Appointment
+              <span>Add Appointment</span>
             </Link>
           )}
         </div>
-      </div>
-
-      {/* Mobile View */}
-      <div className="sm:hidden flex flex-col gap-3 mb-4 sm:mb-6">
-        {/* Search bar */}
-        <div className="relative">
-          <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder={role === 'doctor' ? "Search by patient name..." : "Search by patient or doctor name..."}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Mobile filter toggle */}
-        <button
-          className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-          onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-        >
-          <span>Filters</span>
-          {isMobileFiltersOpen ? (
-            <ChevronUpIcon className="h-5 w-5" />
-          ) : (
-            <ChevronDownIcon className="h-5 w-5" />
-          )}
-        </button>
-
-        {/* Filters - Mobile (collapsible) */}
-        {isMobileFiltersOpen && (
-          <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
-            <div className="relative flex items-center">
-              <CalendarIcon className="absolute left-3 h-5 w-5 text-gray-400" />
-              <input
-                type="date"
-                className="w-full pl-10 pr-4 py-2 border rounded-lg"
-                value={selectedDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-              />
-            </div>
-            <select
-              className="w-full px-4 py-2 border rounded-lg"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="All Status">All Status</option>
-              <option value="pending">Scheduled</option>
-              <option value="confirmed">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <div className="flex gap-2">
-              <button
-                onClick={handleShowAllAppointments}
-                className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
-                  showAllAppointments
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {role === 'doctor' ? 'All My Appointments' : 'All Appointments'}
-              </button>
-              <button
-                onClick={handleShowTodaysAppointments}
-                            className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
-              !showAllAppointments && selectedDate === today
-                ? "bg-green-600 text-white border-green-600"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-            }`}
-              >
-                Today
-              </button>
-            </div>
-            {role !== 'doctor' && (
-              <Link
-                to={`/${role}/appointments/add`}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              >
-                <PlusIcon className="h-5 w-5" />
-                <span>Add Appointment</span>
-              </Link>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Appointments List */}
@@ -519,9 +446,11 @@ const Appointments = () => {
         {filteredAppointments.length > 0 ? (
           <>
             {/* Desktop Table */}
-            <div className="hidden sm:block">
-              <div className="max-h-[40vh] min-h-[320px] px-4 overflow-y-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+            <div className="hidden sm:block w-full">
+              <div className="max-h-[40vh] min-h-[320px] px-2 sm:px-4 overflow-x-auto w-full relative">
+                {/* Horizontal scroll hint for mobile and tablet */}
+                <div className="block md:hidden text-xs text-gray-400 absolute right-2 top-2 z-10 bg-white/80 px-2 rounded shadow">Scroll &rarr;</div>
+                <table className="min-w-[700px] w-full divide-y divide-gray-200 text-sm">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
                       <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -667,25 +596,20 @@ const Appointments = () => {
             {/* Mobile Cards */}
             <div className="sm:hidden divide-y divide-gray-200 max-h-[54vh] overflow-y-auto">
               {filteredAppointments.map((appointment) => (
-                <div key={appointment._id} className="p-3">
-                  <div className="flex justify-between items-start">
+                <div key={appointment._id} className="p-3 mb-2 bg-gray-50 rounded-xl shadow-sm">
+                  <div className="flex justify-between items-start gap-2">
                     <div>
-                      <p className="font-medium">
-                        {appointment?.patient?.firstName || "N/A"}{" "}
-                        {appointment?.patient?.lastName || ""}
+                      <p className="font-medium text-base">{/* larger font for mobile */}
+                        {appointment?.patient?.firstName || "N/A"} {appointment?.patient?.lastName || ""}
                       </p>
                       {role === 'doctor' ? (
-                        <p className="text-sm text-gray-600">
-                          {appointment?.patient?.email || "N/A"}
-                        </p>
+                        <p className="text-xs text-gray-600">{appointment?.patient?.email || "N/A"}</p>
                       ) : (
-                        <p className="text-sm text-gray-600">
-                          Dr. {appointment?.assignedTo?.fullName || "N/A"}
-                        </p>
+                        <p className="text-xs text-gray-600">Dr. {appointment?.assignedTo?.fullName || "N/A"}</p>
                       )}
                     </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${
+                      className={`px-2 py-1 rounded-full text-xs min-w-[70px] text-center ${
                         appointment?.status === "pending"
                           ? "bg-blue-100 text-blue-800"
                           : appointment?.status === "confirmed"
@@ -698,14 +622,14 @@ const Appointments = () => {
                       {appointment?.status || "unknown"}
                     </span>
                   </div>
-                  <div className="mt-2 text-sm text-gray-500">
+                  <div className="mt-2 text-xs text-gray-500 flex flex-col gap-1">
                     <div className="flex items-center">
                       <CalendarIcon className="h-4 w-4 mr-1" />
                       {appointment?.date
                         ? new Date(appointment.date).toLocaleDateString()
                         : "N/A"}
                     </div>
-                    <div className="flex items-center mt-1">
+                    <div className="flex items-center">
                       <ClockIcon className="h-4 w-4 mr-1" />
                       {appointment?.date
                         ? new Date(appointment.date).toLocaleTimeString([], {
@@ -715,11 +639,11 @@ const Appointments = () => {
                         : "N/A"}
                     </div>
                   </div>
-                  <div className="mt-2 flex justify-end gap-3">
+                  <div className="mt-3 flex flex-wrap justify-end gap-3">
                     {role !== 'doctor' && (
                       <Link
                         to={`/${role}/appointments/view/${appointment._id}`}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 p-2 rounded-lg focus:ring-2 focus:ring-blue-300"
                         title="View"
                       >
                         <EyeIcon className="h-5 w-5" />
@@ -729,14 +653,14 @@ const Appointments = () => {
                       <>
                         <Link
                           to={`/${role}/appointments/edit/${appointment._id}`}
-                          className="text-yellow-600 hover:text-yellow-900"
+                          className="text-yellow-600 hover:text-yellow-900 p-2 rounded-lg focus:ring-2 focus:ring-yellow-300"
                           title="Edit"
                         >
                           <PencilSquareIcon className="h-5 w-5" />
                         </Link>
                         <button
                           onClick={() => handleDelete(appointment._id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-900 p-2 rounded-lg focus:ring-2 focus:ring-red-300"
                           title="Delete"
                         >
                           <TrashIcon className="h-5 w-5" />
@@ -747,7 +671,7 @@ const Appointments = () => {
                       <button
                         onClick={() => handleStatusUpdate(appointment._id, "confirmed")}
                         disabled={updatingStatus}
-                        className={`text-green-600 hover:text-green-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`text-green-600 hover:text-green-900 p-2 rounded-lg focus:ring-2 focus:ring-green-300 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title="Start Appointment"
                       >
                         <CheckCircleIcon className="h-5 w-5" />
@@ -757,7 +681,7 @@ const Appointments = () => {
                       <button
                         onClick={() => handleStatusUpdate(appointment._id, "completed")}
                         disabled={updatingStatus}
-                        className={`text-green-600 hover:text-green-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`text-green-600 hover:text-green-900 p-2 rounded-lg focus:ring-2 focus:ring-green-300 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title="Complete Appointment"
                       >
                         <CheckCircleIcon className="h-5 w-5" />
@@ -767,7 +691,7 @@ const Appointments = () => {
                       <button
                         onClick={() => handleStatusUpdate(appointment._id, "cancelled")}
                         disabled={updatingStatus}
-                        className={`text-red-600 hover:text-red-900 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`text-red-600 hover:text-red-900 p-2 rounded-lg focus:ring-2 focus:ring-red-300 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title="Cancel Appointment"
                       >
                         <XCircleIcon className="h-5 w-5" />

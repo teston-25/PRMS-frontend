@@ -54,6 +54,7 @@ const navConfig = {
     items: [
       { name: "Dashboard", to: "/patient/dashboard", icon: <LayoutDashboard size={18} /> },
       { name: "Appointments", to: "/patient/appointments", icon: <CalendarDays size={18} /> },
+      { name: "Invoices", to: "/patient/invoices", icon: <FileText size={18} /> },
       { name: "Settings", to: "/patient/settings", icon: <Settings size={18} /> },
     ],
   },

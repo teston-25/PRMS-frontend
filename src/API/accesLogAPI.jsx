@@ -4,7 +4,7 @@ const auditLogAPI = {
 
   getAuditLogs: async () => {
     try {
-      const response = await api.get("/audit-logs");
+      const response = await api.get("/api/audit-logs");
       return response.data.data;
     } catch (error) {
       console.error("Failed to fetch audit logs:", error);

@@ -5,13 +5,14 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { login, setLoading, setError } from "../authSlice";
 import authAPI from "../../../API/authAPI";
-import { FaHome } from "react-icons/fa";
+import { FaHome, FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -22,6 +23,10 @@ export default function Login() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleLogin = async (e) => {
@@ -102,15 +107,26 @@ export default function Login() {
 
           <div className="relative">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
-              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2 pr-10 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               value={formData.password}
               onChange={handleChange}
               required
               autoComplete="current-password"
             />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              {showPassword ? (
+                <FaEyeSlash size={16} />
+              ) : (
+                <FaEye size={16} />
+              )}
+            </button>
           </div>
 
           <div className="text-right">

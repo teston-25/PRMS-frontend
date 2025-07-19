@@ -34,6 +34,7 @@ import PatientDashboard from "../features/patient/dashboard/PatientDashboard";
 import DoctorAppointmentView from "../features/doctor/appointments/DoctorAppointmentView";
 import DoctorAppointmentsList from "../features/doctor/appointments/DoctorAppointmentsList";
 import PatientAppointments from "../features/patient/appointments/PatientAppointments";
+import PatientInvoices from "../features/patient/invoice/PatientInvoices";
 
 export default function AppRoutes() {
   return (
@@ -127,6 +128,7 @@ export default function AppRoutes() {
         <Route path="/patient" element={<PatientLayout />}>
           <Route path="dashboard" element={<PatientDashboard />} />
           <Route path="appointments" element={<PatientAppointments />} />
+          <Route path="invoices" element={<PatientInvoices />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Route>

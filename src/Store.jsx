@@ -17,6 +17,7 @@ import patientDashboardReducer from "./features/patient/dashboard/patientDashboa
 import doctorAppointmentsReducer from "./features/doctor/appointments/docAppointmentSlice";
 import doctorInvoiceReducer from "./features/doctor/invoice/invoiceSlice";
 import patientAppointmentsReducer from "./features/patient/dashboard/patientDashboardSlice";
+import patientInvoiceReducer from "./features/patient/invoice/patientInvoiceSlice";
 
 const store = configureStore({
   reducer: {
@@ -38,6 +39,7 @@ const store = configureStore({
     doctorAppointments: doctorAppointmentsReducer,
     doctorInvoices: doctorInvoiceReducer,
     patientAppointments: patientAppointmentsReducer,
+    patientInvoices: patientInvoiceReducer,
   },
 });
 
